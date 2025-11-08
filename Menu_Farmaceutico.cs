@@ -19,7 +19,7 @@ namespace Laboratorio_4
             this.usuario = usuario;
         }
 
-        private void AbrirFormulario(Form formHijo)
+        public void AbrirFormulario(Form formHijo)
         {
             foreach (Form frm in this.MdiChildren)
                 frm.Close();

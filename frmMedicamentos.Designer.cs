@@ -37,26 +37,30 @@
             // dgvMedicamentos
             // 
             this.dgvMedicamentos.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvMedicamentos.Location = new System.Drawing.Point(32, 86);
+            this.dgvMedicamentos.Location = new System.Drawing.Point(43, 106);
+            this.dgvMedicamentos.Margin = new System.Windows.Forms.Padding(4);
             this.dgvMedicamentos.Name = "dgvMedicamentos";
-            this.dgvMedicamentos.Size = new System.Drawing.Size(737, 341);
+            this.dgvMedicamentos.RowHeadersWidth = 51;
+            this.dgvMedicamentos.Size = new System.Drawing.Size(983, 420);
             this.dgvMedicamentos.TabIndex = 0;
             this.dgvMedicamentos.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvMedicamentos_CellContentClick);
             // 
             // lblMedicamentos
             // 
             this.lblMedicamentos.AutoSize = true;
-            this.lblMedicamentos.Location = new System.Drawing.Point(29, 45);
+            this.lblMedicamentos.Location = new System.Drawing.Point(39, 55);
+            this.lblMedicamentos.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblMedicamentos.Name = "lblMedicamentos";
-            this.lblMedicamentos.Size = new System.Drawing.Size(76, 13);
+            this.lblMedicamentos.Size = new System.Drawing.Size(96, 16);
             this.lblMedicamentos.TabIndex = 1;
-            this.lblMedicamentos.Text = "Medicamnetos";
+            this.lblMedicamentos.Text = "Medicamentos";
             // 
             // btnAgregar
             // 
-            this.btnAgregar.Location = new System.Drawing.Point(694, 35);
+            this.btnAgregar.Location = new System.Drawing.Point(926, 25);
+            this.btnAgregar.Margin = new System.Windows.Forms.Padding(4);
             this.btnAgregar.Name = "btnAgregar";
-            this.btnAgregar.Size = new System.Drawing.Size(75, 23);
+            this.btnAgregar.Size = new System.Drawing.Size(100, 28);
             this.btnAgregar.TabIndex = 2;
             this.btnAgregar.Text = "➕";
             this.btnAgregar.UseVisualStyleBackColor = true;
@@ -64,13 +68,14 @@
             // 
             // frmMedicamentos
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(1067, 554);
             this.Controls.Add(this.btnAgregar);
             this.Controls.Add(this.lblMedicamentos);
             this.Controls.Add(this.dgvMedicamentos);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "frmMedicamentos";

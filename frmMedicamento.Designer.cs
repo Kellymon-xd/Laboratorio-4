@@ -46,85 +46,95 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(53, 102);
+            this.label1.Location = new System.Drawing.Point(71, 126);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(44, 13);
+            this.label1.Size = new System.Drawing.Size(56, 16);
             this.label1.TabIndex = 0;
             this.label1.Text = "Nombre";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(55, 142);
+            this.label2.Location = new System.Drawing.Point(73, 175);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(42, 13);
+            this.label2.Size = new System.Drawing.Size(52, 16);
             this.label2.TabIndex = 1;
             this.label2.Text = "Imagen";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(55, 269);
+            this.label3.Location = new System.Drawing.Point(73, 331);
+            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(76, 13);
+            this.label3.Size = new System.Drawing.Size(95, 16);
             this.label3.TabIndex = 3;
             this.label3.Text = "Precio Unitario";
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(53, 229);
+            this.label4.Location = new System.Drawing.Point(71, 282);
+            this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(99, 13);
+            this.label4.Size = new System.Drawing.Size(127, 16);
             this.label4.TabIndex = 2;
             this.label4.Text = "Cantidad disponible";
             // 
             // txtNombre
             // 
-            this.txtNombre.Location = new System.Drawing.Point(176, 99);
+            this.txtNombre.Location = new System.Drawing.Point(235, 122);
+            this.txtNombre.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.txtNombre.MaxLength = 100;
             this.txtNombre.Name = "txtNombre";
-            this.txtNombre.Size = new System.Drawing.Size(100, 20);
+            this.txtNombre.Size = new System.Drawing.Size(132, 22);
             this.txtNombre.TabIndex = 4;
             // 
             // pbImage
             // 
-            this.pbImage.Location = new System.Drawing.Point(226, 142);
+            this.pbImage.Location = new System.Drawing.Point(301, 175);
+            this.pbImage.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.pbImage.Name = "pbImage";
-            this.pbImage.Size = new System.Drawing.Size(50, 50);
+            this.pbImage.Size = new System.Drawing.Size(67, 62);
             this.pbImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pbImage.TabIndex = 5;
             this.pbImage.TabStop = false;
             // 
             // nudCantD
             // 
-            this.nudCantD.Location = new System.Drawing.Point(176, 222);
+            this.nudCantD.Location = new System.Drawing.Point(235, 273);
+            this.nudCantD.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.nudCantD.Name = "nudCantD";
-            this.nudCantD.Size = new System.Drawing.Size(100, 20);
+            this.nudCantD.Size = new System.Drawing.Size(133, 22);
             this.nudCantD.TabIndex = 6;
             // 
             // txtPrecioU
             // 
-            this.txtPrecioU.Location = new System.Drawing.Point(176, 266);
+            this.txtPrecioU.Location = new System.Drawing.Point(235, 327);
+            this.txtPrecioU.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.txtPrecioU.MaxLength = 100;
             this.txtPrecioU.Name = "txtPrecioU";
-            this.txtPrecioU.Size = new System.Drawing.Size(100, 20);
+            this.txtPrecioU.Size = new System.Drawing.Size(132, 22);
             this.txtPrecioU.TabIndex = 7;
             // 
             // Title
             // 
             this.Title.AutoSize = true;
-            this.Title.Location = new System.Drawing.Point(120, 51);
+            this.Title.Location = new System.Drawing.Point(160, 63);
+            this.Title.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.Title.Name = "Title";
-            this.Title.Size = new System.Drawing.Size(71, 13);
+            this.Title.Size = new System.Drawing.Size(89, 16);
             this.Title.TabIndex = 8;
             this.Title.Text = "Medicamento";
             // 
             // btnAceptar
             // 
-            this.btnAceptar.Location = new System.Drawing.Point(116, 319);
+            this.btnAceptar.Location = new System.Drawing.Point(155, 393);
+            this.btnAceptar.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnAceptar.Name = "btnAceptar";
-            this.btnAceptar.Size = new System.Drawing.Size(75, 23);
+            this.btnAceptar.Size = new System.Drawing.Size(100, 28);
             this.btnAceptar.TabIndex = 9;
             this.btnAceptar.Text = "Aceptar";
             this.btnAceptar.UseVisualStyleBackColor = true;
@@ -132,9 +142,10 @@
             // 
             // btnImagen
             // 
-            this.btnImagen.Location = new System.Drawing.Point(136, 142);
+            this.btnImagen.Location = new System.Drawing.Point(181, 175);
+            this.btnImagen.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnImagen.Name = "btnImagen";
-            this.btnImagen.Size = new System.Drawing.Size(75, 23);
+            this.btnImagen.Size = new System.Drawing.Size(100, 28);
             this.btnImagen.TabIndex = 10;
             this.btnImagen.Text = "Cargar";
             this.btnImagen.UseVisualStyleBackColor = true;
@@ -142,9 +153,9 @@
             // 
             // frmMedicamento
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(329, 390);
+            this.ClientSize = new System.Drawing.Size(439, 480);
             this.Controls.Add(this.btnImagen);
             this.Controls.Add(this.btnAceptar);
             this.Controls.Add(this.Title);
@@ -156,8 +167,10 @@
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "frmMedicamento";
             this.Text = "Medicamento";
+            this.Load += new System.EventHandler(this.frmMedicamento_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pbImage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudCantD)).EndInit();
             this.ResumeLayout(false);

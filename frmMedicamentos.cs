@@ -71,6 +71,14 @@ namespace Laboratorio_4
                 UseColumnTextForButtonValue = true,
                 Width = 80
             };
+            var colEliminar = new DataGridViewButtonColumn
+            {
+                HeaderText = "Eliminar",
+                Text = "🗑️",
+                UseColumnTextForButtonValue = true,
+                Width = 80
+            };
+            dgvMedicamentos.Columns.Add(colEliminar);
             dgvMedicamentos.Columns.Add(colAgregar);
 
             dgvMedicamentos.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
@@ -79,20 +87,57 @@ namespace Laboratorio_4
 
         private void dgvMedicamentos_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex >= 0 && dgvMedicamentos.Columns[e.ColumnIndex] is DataGridViewButtonColumn)
+            if (e.RowIndex < 0)
+                return;
+
+            if (dgvMedicamentos.Columns[e.ColumnIndex].HeaderText == "Eliminar")
             {
                 var medicamento = (Medicamento)dgvMedicamentos.Rows[e.RowIndex].DataBoundItem;
-                frmMedicamento frm = new frmMedicamento(2);
-                frm.setDatos(medicamento);
-                frm.Show();
 
+                var confirm = MessageBox.Show(
+                    $"¿Seguro que desea eliminar el medicamento '{medicamento.Nombre}'?",
+                    "Confirmar eliminación",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (confirm == DialogResult.No)
+                    return;
+
+                using (var conexion = new ConexionBD())
+                {
+                    var dao = new MedicamentosDAO(conexion);
+                    string resultado = dao.EliminarMedicamento(medicamento.IdMedicamento);
+                    MessageBox.Show(resultado);
+                }
+
+                CargarMedicamentos();
             }
         }
+
+
+
+
+        public void CargarMedicamentos()
+        {
+            using (var conexion = new ConexionBD())
+            {
+                var dao = new MedicamentosDAO(conexion);
+                var lista = dao.ObtenerTodos();
+                dgvMedicamentos.DataSource = lista;
+            }
+        }
+
 
         private void btnAgregar_Click(object sender, EventArgs e)
         {
             frmMedicamento frm = new frmMedicamento(1);
             frm.Show();
         }
+
+     
+
+
+
+
     }
 }

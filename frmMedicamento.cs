@@ -11,14 +11,14 @@ namespace Laboratorio_4
     {
         private string Id_medicamento;
         private string imagen;
-        private int mode; // 1 = agregar, 2 = editar
+        private int mode; // 1 = agregar, 2 = editar, 3=eliminar
         private readonly string carpetaImg = Path.Combine(Application.StartupPath, @"..\..\img\");
 
         public frmMedicamento(int mode)
         {
+
             InitializeComponent();
             this.mode = mode;
-
             if (!Directory.Exists(carpetaImg))
                 Directory.CreateDirectory(carpetaImg);
         }
@@ -116,17 +116,42 @@ namespace Laboratorio_4
             {
                 var dao = new MedicamentosDAO(conexion);
 
-                string resultado;
+                string resultado="";
+
 
                 if (mode == 1) // Agregar
                     resultado = dao.AgregarMedicamento(nombre, nombreImagen, cantidad, precio);
-                else // Editar
+                else if (mode == 2) // Editar
                     resultado = dao.ModificarMedicamento(Id_medicamento, nombre, nombreImagen, cantidad, precio);
+                else if (mode == 3) // Eliminar
+                {
+                    var confirm = MessageBox.Show($"¿Seguro que desea eliminar '{nombre}'?",
+                                                  "Confirmar eliminación",
+                                                  MessageBoxButtons.YesNo,
+                                                  MessageBoxIcon.Warning);
+                    if (confirm == DialogResult.No)
+                        return;
 
-                MessageBox.Show(resultado);
+                    resultado = dao.EliminarMedicamento(Id_medicamento);
+                }
+
             }
 
+           
+            var frm = Application.OpenForms["frmMedicamentos"] as frmMedicamentos;
+            frm?.CargarMedicamentos();
+
+
             this.Close();
+        }
+
+    
+
+
+
+        private void frmMedicamento_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }

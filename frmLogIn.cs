@@ -47,5 +47,10 @@ namespace Laboratorio_4
             var frmR = new frmRegistroCliente();
             frmR.ShowDialog();
         }
+
+        private void frmLogIn_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

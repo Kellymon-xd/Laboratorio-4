@@ -82,7 +82,7 @@
             this.textBox3.Location = new System.Drawing.Point(162, 4);
             this.textBox3.Margin = new System.Windows.Forms.Padding(4);
             this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(132, 20);
+            this.textBox3.Size = new System.Drawing.Size(132, 22);
             this.textBox3.TabIndex = 2;
             // 
             // txtInput
@@ -90,10 +90,10 @@
             this.txtInput.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
             this.txtInput.BackColor = System.Drawing.SystemColors.ButtonHighlight;
             this.txtInput.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtInput.Location = new System.Drawing.Point(155, 34);
+            this.txtInput.Location = new System.Drawing.Point(178, 34);
             this.txtInput.Margin = new System.Windows.Forms.Padding(4);
             this.txtInput.Name = "txtInput";
-            this.txtInput.Size = new System.Drawing.Size(131, 22);
+            this.txtInput.Size = new System.Drawing.Size(131, 26);
             this.txtInput.TabIndex = 2;
             // 
             // lblTitle
@@ -103,7 +103,7 @@
             this.lblTitle.Location = new System.Drawing.Point(34, 30);
             this.lblTitle.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(113, 16);
+            this.lblTitle.Size = new System.Drawing.Size(136, 20);
             this.lblTitle.TabIndex = 0;
             this.lblTitle.Text = "Ingrese un valor:";
             // 
@@ -119,7 +119,7 @@
             // 
             // Dialogo
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLightLight;
             this.ClientSize = new System.Drawing.Size(419, 128);
