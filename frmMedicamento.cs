@@ -12,7 +12,7 @@ namespace Laboratorio_4
         private string Id_medicamento;
         private string imagen;
         private int mode; // 1 = agregar, 2 = editar
-        private readonly string carpetaImg = Path.Combine(Application.StartupPath, "img");
+        private readonly string carpetaImg = Path.Combine(Application.StartupPath, @"..\..\img\");
 
         public frmMedicamento(int mode)
         {
@@ -36,9 +36,14 @@ namespace Laboratorio_4
 
             if (!string.IsNullOrEmpty(imagen))
             {
-                string rutaImagen = Path.Combine(carpetaImg, imagen);
-                if (File.Exists(rutaImagen))
-                    pbImage.Image = Image.FromFile(rutaImagen);
+                string ruta = Path.Combine(carpetaImg, imagen);
+                if (File.Exists(ruta))
+                {
+                    using (var fs = new FileStream(ruta, FileMode.Open, FileAccess.Read))
+                    {
+                        pbImage.Image = Image.FromStream(fs);
+                    }
+                }
             }
         }
 
@@ -49,7 +54,10 @@ namespace Laboratorio_4
                 ofd.Filter = "Archivos de imagen|*.jpg;*.jpeg;*.png;*.bmp";
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
-                    pbImage.Image = Image.FromFile(ofd.FileName);
+                    using (var fs = new FileStream(ofd.FileName, FileMode.Open, FileAccess.Read))
+                    {
+                        pbImage.Image = Image.FromStream(fs);
+                    }
                     imagen = ofd.FileName;
                 }
             }
@@ -73,39 +81,49 @@ namespace Laboratorio_4
                 return;
             }
 
-            string extension = Path.GetExtension(imagen) ?? ".jpg";
-            string nombreImagen = nombre + extension;
-            string rutaDestino = Path.Combine(carpetaImg, nombreImagen);
+            string nombreImagen = null;
 
-            try
+            if (!string.IsNullOrEmpty(imagen))
             {
-                if (!string.IsNullOrEmpty(imagen) && File.Exists(imagen))
+                string extension = ".jpg";
+                nombreImagen = nombre.ToLower() + extension;
+                string rutaDestino = Path.Combine(carpetaImg, nombreImagen);
+
+                try
                 {
-                    File.Copy(imagen, rutaDestino, true);
+
+                    if (File.Exists(imagen) && !imagen.StartsWith(carpetaImg, StringComparison.OrdinalIgnoreCase))
+                    {
+                        File.Copy(imagen, rutaDestino, true);
+                    }
+                    else if (File.Exists(Path.Combine(carpetaImg, imagen)))
+                    {
+                        string rutaActual = Path.Combine(carpetaImg, imagen);
+                        if (!rutaActual.Equals(rutaDestino, StringComparison.OrdinalIgnoreCase))
+                        {
+                            File.Copy(rutaActual, rutaDestino, true);
+                            File.Delete(rutaActual);
+                        }
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error al guardar la imagen: " + ex.Message);
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error al guardar la imagen: " + ex.Message);
+                }
             }
 
-            if (mode == 1) // Agregar
+            using (var conexion = new ConexionBD())
             {
-                using (var conexion = new ConexionBD())
-                {
-                    var dao = new MedicamentosDAO(conexion);
-                    string resultado = dao.AgregarMedicamento(nombre, nombreImagen, cantidad, precio);
-                    MessageBox.Show(resultado);
-                }
-            }
-            else if (mode == 2) // Editar
-            {
-                using (var conexion = new ConexionBD())
-                {
-                    var dao = new MedicamentosDAO(conexion);
-                    string resultado = dao.ModificarMedicamento(Id_medicamento, nombre, nombreImagen, cantidad, precio);
-                    MessageBox.Show(resultado);
-                }
+                var dao = new MedicamentosDAO(conexion);
+
+                string resultado;
+
+                if (mode == 1) // Agregar
+                    resultado = dao.AgregarMedicamento(nombre, nombreImagen, cantidad, precio);
+                else // Editar
+                    resultado = dao.ModificarMedicamento(Id_medicamento, nombre, nombreImagen, cantidad, precio);
+
+                MessageBox.Show(resultado);
             }
 
             this.Close();

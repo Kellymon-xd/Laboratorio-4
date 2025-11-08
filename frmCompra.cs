@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,14 +34,10 @@ namespace Laboratorio_4
 
         private void ConfigurarDataGridView()
         {
-            // Evita columnas automáticas para poder personalizar
             dgvCatalogo.AutoGenerateColumns = false;
 
-            // Limpia columnas previas
             dgvCatalogo.Columns.Clear();
 
-            // 🔹 Columnas normales
-            // ID (oculto)
             dgvCatalogo.Columns.Add(new DataGridViewTextBoxColumn
             {
                 DataPropertyName = "IdMedicamento",
@@ -55,6 +52,16 @@ namespace Laboratorio_4
                 HeaderText = "Medicamento",
                 AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
             });
+
+            var imgCol = new DataGridViewImageColumn
+            {
+                DataPropertyName = "Imagen",
+                HeaderText = "Imagen",
+                ImageLayout = DataGridViewImageCellLayout.Zoom,
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+            };
+            dgvCatalogo.Columns.Add(imgCol);
+
 
             dgvCatalogo.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -89,6 +96,20 @@ namespace Laboratorio_4
                 var medicamento = (Medicamento)dgvCatalogo.Rows[e.RowIndex].DataBoundItem;
                 CarritoManager.Instancia.Agregar(medicamento);
                 MessageBox.Show($"{medicamento.Nombre} agregado al carrito.");
+            }
+        }
+
+        private void dgvCatalogo_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (dgvCatalogo.Columns[e.ColumnIndex].HeaderText == "Imagen" && e.Value != null)
+            {
+                string rutaImg = Path.Combine(Application.StartupPath, @"..\..\img\");
+
+                string ruta = Path.Combine(rutaImg, e.Value.ToString());
+                if (File.Exists(ruta))
+                {
+                    e.Value = Image.FromFile(ruta);
+                }
             }
         }
 

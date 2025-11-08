@@ -50,6 +50,7 @@
             this.dgvCatalogo.Size = new System.Drawing.Size(737, 341);
             this.dgvCatalogo.TabIndex = 3;
             this.dgvCatalogo.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvCatalogo_CellContentClick);
+            this.dgvCatalogo.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dgvCatalogo_CellFormatting);
             // 
             // frmCompra
             // 
