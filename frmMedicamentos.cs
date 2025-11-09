@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,6 +38,8 @@ namespace Laboratorio_4
 
             dgvMedicamentos.Columns.Clear();
 
+            dgvMedicamentos.RowTemplate.Height = 80;
+
             dgvMedicamentos.Columns.Add(new DataGridViewTextBoxColumn
             {
                 DataPropertyName = "IdMedicamento",
@@ -51,6 +54,15 @@ namespace Laboratorio_4
                 HeaderText = "Medicamento",
                 AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
             });
+
+            var imgCol = new DataGridViewImageColumn
+            {
+                DataPropertyName = "Imagen",
+                HeaderText = "Imagen",
+                ImageLayout = DataGridViewImageCellLayout.Zoom,
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+            };
+            dgvMedicamentos.Columns.Add(imgCol);
 
             dgvMedicamentos.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -134,10 +146,35 @@ namespace Laboratorio_4
             frm.Show();
         }
 
-     
+        private void dgvMedicamentos_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (dgvMedicamentos.Columns[e.ColumnIndex].HeaderText == "Imagen" && e.Value != null)
+            {
+                try
+                {
+                    string rutaImg = Path.Combine(Application.StartupPath, @"..\..\img\");
+                    string ruta = Path.Combine(rutaImg, e.Value.ToString());
 
-
-
+                    if (File.Exists(ruta))
+                    {
+                        using (var tempImage = Image.FromFile(ruta))
+                        {
+                            e.Value = new Bitmap(tempImage);
+                        }
+                    }
+                    else
+                    {
+                        // Si no existe la imagen, dejar la celda vacía
+                        e.Value = null;
+                    }
+                }
+                catch
+                {
+                    // Si ocurre un error (imagen dañada, ruta inválida, etc.)
+                    e.Value = null;
+                }
+            }
+        }
 
     }
 }

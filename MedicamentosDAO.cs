@@ -80,22 +80,23 @@ namespace Laboratorio_4
         {
             try
             {
-                string query = "DELETE FROM medicamentos WHERE id_medicamento = @id";
+                string query = "SELECT eliminar_medicamento(@id)";
                 using (var cmd = new NpgsqlCommand(query, _conexion.Conexion))
                 {
                     cmd.Parameters.AddWithValue("@id", int.Parse(id));
-                    int filas = cmd.ExecuteNonQuery();
-                    return filas > 0 ? "Medicamento eliminado correctamente." : "No se encontró el medicamento.";
+
+                    object result = cmd.ExecuteScalar();
+
+                    if (result != null)
+                        return result.ToString();
+                    else
+                        return "No se recibió respuesta del servidor.";
                 }
             }
             catch (Exception ex)
             {
-                return "Error al eliminar: " + ex.Message;
+                return "Error al eliminar medicamento: " + ex.Message;
             }
         }
-
-
-
     }
-
 }

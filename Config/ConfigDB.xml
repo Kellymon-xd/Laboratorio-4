@@ -1,8 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <config>
 	<host>bG9jYWxob3N0</host>
-	<puerto>NTQzMg==</puerto>
+	<!-- Kelly puerto NjUwMDA= -->
+	<!-- Francesco puerto NTQzMg== -->
+	<puerto>NjUwMDA=</puerto>
 	<dbname>ZmFybWFjaWE=</dbname>
 	<usuario>cG9zdGdyZXM=</usuario>
-	<password>NTcxNjAxNGFz</password>
+	<!-- Kelly password MTIz -->
+	<!-- Francesco password NTcxNjAxNGFz -->
+	<password>MTIz</password>
 </config>

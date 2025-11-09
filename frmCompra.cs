@@ -37,6 +37,7 @@ namespace Laboratorio_4
             dgvCatalogo.AutoGenerateColumns = false;
 
             dgvCatalogo.Columns.Clear();
+            dgvCatalogo.RowTemplate.Height = 80;
 
             dgvCatalogo.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -103,15 +104,32 @@ namespace Laboratorio_4
         {
             if (dgvCatalogo.Columns[e.ColumnIndex].HeaderText == "Imagen" && e.Value != null)
             {
-                string rutaImg = Path.Combine(Application.StartupPath, @"..\..\img\");
-
-                string ruta = Path.Combine(rutaImg, e.Value.ToString());
-                if (File.Exists(ruta))
+                try
                 {
-                    e.Value = Image.FromFile(ruta);
+                    string rutaImg = Path.Combine(Application.StartupPath, @"..\..\img\");
+                    string ruta = Path.Combine(rutaImg, e.Value.ToString());
+
+                    if (File.Exists(ruta))
+                    {
+                        using (var tempImage = Image.FromFile(ruta))
+                        {
+                            e.Value = new Bitmap(tempImage);
+                        }
+                    }
+                    else
+                    {
+                        // Si el archivo no existe, dejar la celda vacía
+                        e.Value = null;
+                    }
+                }
+                catch
+                {
+                    // Si hay algún error (imagen dañada, ruta incorrecta, etc.)
+                    e.Value = null;
                 }
             }
         }
+
 
     }
 }
