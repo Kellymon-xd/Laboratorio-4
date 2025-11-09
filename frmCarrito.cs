@@ -1,6 +1,8 @@
 ﻿using Laboratorio_4.Modelos;
 using Laboratorio_4.Servicios;
 using System;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -14,11 +16,269 @@ namespace Laboratorio_4
         {
             InitializeComponent();
             this.idCliente = idCliente;
-            ConfigurarDataGridView();
+
+            // Configuración del FlowLayoutPanel
+            ConfigurarFlowLayout();
+
+            // Cargar items del carrito
             CargarCarrito();
         }
 
-        private void btnPedir_Click(object sender, EventArgs e)
+        private void ConfigurarFlowLayout()
+        {
+            flowLayoutPanel1.Controls.Clear();
+            flowLayoutPanel1.AutoScroll = true;
+            flowLayoutPanel1.WrapContents = false;
+            flowLayoutPanel1.FlowDirection = FlowDirection.TopDown;
+            flowLayoutPanel1.Padding = new Padding(10);
+        }
+
+        private void CargarCarrito()
+        {
+            flowLayoutPanel1.Controls.Clear();
+
+            var items = CarritoManager.Instancia.Items;
+
+            foreach (var item in items)
+            {
+                flowLayoutPanel1.Controls.Add(CrearTarjetaCarrito(item));
+            }
+
+            // Panel de resumen (abajo)
+            flowLayoutPanel1.Controls.Add(CrearPanelResumen());
+        }
+
+        private Panel CrearTarjetaCarrito(ItemCarrito item)
+        {
+            Panel panel = new Panel
+            {
+                Width = flowLayoutPanel1.ClientSize.Width - 40,
+                Height = 110,
+                BackColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle,
+                Margin = new Padding(8),
+                Padding = new Padding(10)
+            };
+
+            int centroY = panel.Height / 2;
+
+            // Imagen del medicamento
+            PictureBox pb = new PictureBox
+            {
+                Width = 80,
+                Height = 80,
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Left = 10,
+                Top = centroY - 40
+            };
+            string rutaImg = Path.Combine(Application.StartupPath, @"..\..\img\", item.Medicamento.Imagen ?? "");
+            if (File.Exists(rutaImg))
+            {
+                using (var tempImg = Image.FromFile(rutaImg))
+                    pb.Image = new Bitmap(tempImg);
+            }
+
+            // Nombre
+            Label lblNombre = new Label
+            {
+                Text = item.Medicamento.Nombre,
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                Left = 110,
+                Top = centroY - 25,
+                AutoSize = true
+            };
+
+            // Precio unitario
+            Label lblPrecio = new Label
+            {
+                Text = $"Precio: {item.Medicamento.PrecioUnitario:C2}",
+                Font = new Font("Segoe UI", 10),
+                Left = 110,
+                Top = centroY + 5,
+                AutoSize = true
+            };
+
+            // Botón eliminar
+            Button btnEliminar = new Button
+            {
+                Text = "🗑️",
+                Font = new Font("Segoe UI", 10),
+                Width = 40,
+                Height = 35,
+                BackColor = Color.LightCoral,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnEliminar.FlatAppearance.BorderSize = 0;
+            btnEliminar.Top = centroY - (btnEliminar.Height / 2);
+            btnEliminar.Click += (s, e) =>
+            {
+                CarritoManager.Instancia.Eliminar(item.Medicamento.IdMedicamento);
+                CargarCarrito();
+            };
+
+            // Botón -
+            Button btnMenos = new Button
+            {
+                Text = "-",
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                Width = 35,
+                Height = 35,
+                BackColor = Color.Gainsboro,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnMenos.FlatAppearance.BorderSize = 0;
+            btnMenos.Top = centroY - (btnMenos.Height / 2);
+            btnMenos.Click += (s, e) =>
+            {
+                if (item.Cantidad > 1)
+                {
+                    CarritoManager.Instancia.ModificarCantidad(item.Medicamento.IdMedicamento, item.Cantidad - 1);
+                    CargarCarrito();
+                }
+            };
+
+            // Cantidad
+            Label lblCantidad = new Label
+            {
+                Text = item.Cantidad.ToString(),
+                Font = new Font("Segoe UI", 11),
+                Width = 40,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Top = centroY - 15
+            };
+
+            // Botón +
+            Button btnMas = new Button
+            {
+                Text = "+",
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                Width = 35,
+                Height = 35,
+                BackColor = Color.LightGreen,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnMas.FlatAppearance.BorderSize = 0;
+            btnMas.Top = centroY - (btnMas.Height / 2);
+            btnMas.Click += (s, e) =>
+            {
+                if (item.Cantidad < item.Medicamento.CantidadDisponible)
+                {
+                    CarritoManager.Instancia.ModificarCantidad(item.Medicamento.IdMedicamento, item.Cantidad + 1);
+                    CargarCarrito();
+                }
+            };
+
+            // Subtotal
+            Label lblSubtotal = new Label
+            {
+                Text = $"{item.Total:C2}",
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                ForeColor = Color.DarkGreen,
+                Width = 100,
+                TextAlign = ContentAlignment.MiddleRight,
+                Top = centroY - 15
+            };
+
+            // Agregar controles
+            panel.Controls.Add(pb);
+            panel.Controls.Add(lblNombre);
+            panel.Controls.Add(lblPrecio);
+            panel.Controls.Add(btnEliminar);
+            panel.Controls.Add(btnMenos);
+            panel.Controls.Add(lblCantidad);
+            panel.Controls.Add(btnMas);
+            panel.Controls.Add(lblSubtotal);
+
+            // Ajuste dinámico al redimensionar
+            panel.Resize += (s, e) =>
+            {
+                int baseRight = panel.Width - 10;
+                btnEliminar.Left = baseRight - 300;
+                btnMenos.Left = baseRight - 250;
+                lblCantidad.Left = baseRight - 210;
+                btnMas.Left = baseRight - 170;
+                lblSubtotal.Left = baseRight - 90;
+
+                int newCentroY = panel.Height / 2;
+                pb.Top = newCentroY - 40;
+                lblNombre.Top = newCentroY - 25;
+                lblPrecio.Top = newCentroY + 5;
+                btnEliminar.Top = newCentroY - (btnEliminar.Height / 2);
+                btnMenos.Top = newCentroY - (btnMenos.Height / 2);
+                lblCantidad.Top = newCentroY - 15;
+                btnMas.Top = newCentroY - (btnMas.Height / 2);
+                lblSubtotal.Top = newCentroY - 15;
+            };
+
+            return panel;
+        }
+
+        private Panel CrearPanelResumen()
+        {
+            Panel resumen = new Panel
+            {
+                Height = 80,
+                Width = flowLayoutPanel1.ClientSize.Width - 40,
+                Margin = new Padding(10),
+                BackColor = Color.White,
+                Dock = DockStyle.Top
+            };
+
+            decimal total = CarritoManager.Instancia.Items.Sum(i => i.Total);
+
+            TableLayoutPanel tabla = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 3,
+                RowCount = 1
+            };
+
+            tabla.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+            tabla.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
+            tabla.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
+
+            Label lblTotal = new Label
+            {
+                Text = "Total:",
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                Anchor = AnchorStyles.Left,
+                AutoSize = true
+            };
+
+            Label lblNum = new Label
+            {
+                Text = $"{total:C2}",
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                ForeColor = Color.ForestGreen,
+                Anchor = AnchorStyles.Left,
+                AutoSize = true
+            };
+
+            Button btnFinalizar = new Button
+            {
+                Text = "Finalizar pedido",
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                BackColor = Color.ForestGreen,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Height = 40,
+                Width = 180,
+                Anchor = AnchorStyles.Right
+            };
+            btnFinalizar.FlatAppearance.BorderSize = 0;
+            btnFinalizar.Click += BtnFinalizar_Click;
+
+            tabla.Controls.Add(lblTotal, 0, 0);
+            tabla.Controls.Add(lblNum, 1, 0);
+            tabla.Controls.Add(btnFinalizar, 2, 0);
+
+            resumen.Controls.Add(tabla);
+
+            return resumen;
+        }
+
+        private void BtnFinalizar_Click(object sender, EventArgs e)
         {
             if (CarritoManager.Instancia.Items.Count == 0)
             {
@@ -43,7 +303,6 @@ namespace Laboratorio_4
                     string resultado = pedidosDAO.RegistrarPedido(idCliente, ids, cantidades);
                     MessageBox.Show(resultado, "Pedido", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                    // Limpiar carrito
                     CarritoManager.Instancia.Vaciar();
                     CargarCarrito();
                 }
@@ -51,152 +310,6 @@ namespace Laboratorio_4
                 {
                     MessageBox.Show($"❌ Error al registrar pedido: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-            }
-        }
-
-        private void ConfigurarDataGridView()
-        {
-            dgvCarrito.AutoGenerateColumns = false;
-            dgvCarrito.AllowUserToAddRows = false;
-            dgvCarrito.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvCarrito.Columns.Clear();
-
-            // ID oculto
-            dgvCarrito.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                DataPropertyName = "IdMedicamento",
-                Name = "IdMedicamento",
-                HeaderText = "ID",
-                Visible = false
-            });
-
-            // Nombre
-            dgvCarrito.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                DataPropertyName = "Nombre",
-                Name = "Nombre",
-                HeaderText = "Medicamento",
-                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
-            });
-
-            // Precio
-            dgvCarrito.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                DataPropertyName = "PrecioUnitario",
-                Name = "PrecioUnitario",
-                HeaderText = "Precio",
-                Width = 80
-            });
-
-            // Botón "-"
-            dgvCarrito.Columns.Add(new DataGridViewButtonColumn
-            {
-                HeaderText = "",
-                Name = "btnMenos",
-                Text = "-",
-                UseColumnTextForButtonValue = true,
-                Width = 30
-            });
-
-            // Cantidad
-            dgvCarrito.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                DataPropertyName = "Cantidad",
-                Name = "Cantidad",
-                HeaderText = "Cantidad",
-                Width = 50,
-                ReadOnly = true
-            });
-
-            // Botón "+"
-            dgvCarrito.Columns.Add(new DataGridViewButtonColumn
-            {
-                HeaderText = "",
-                Name = "btnMas",
-                Text = "+",
-                UseColumnTextForButtonValue = true,
-                Width = 30
-            });
-
-            // Subtotal
-            dgvCarrito.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                DataPropertyName = "Subtotal",
-                Name = "Subtotal",
-                HeaderText = "Subtotal",
-                Width = 80,
-                ReadOnly = true
-            });
-
-            // Botón eliminar
-            dgvCarrito.Columns.Add(new DataGridViewButtonColumn
-            {
-                HeaderText = "",
-                Name = "btnEliminar",
-                Text = "🗑️",
-                UseColumnTextForButtonValue = true,
-                Width = 50
-            });
-
-            dgvCarrito.CellClick += DgvCarrito_CellClick;
-        }
-
-        private void CargarCarrito()
-        {
-            var items = CarritoManager.Instancia.Items
-                .Select(i => new
-                {
-                    IdMedicamento = i.Medicamento.IdMedicamento,
-                    Nombre = i.Medicamento.Nombre,
-                    PrecioUnitario = i.Medicamento.PrecioUnitario,
-                    Cantidad = i.Cantidad,
-                    Subtotal = i.Total,
-                    CantidadDisponible = i.Medicamento.CantidadDisponible
-                })
-                .ToList();
-
-            dgvCarrito.DataSource = null;
-            dgvCarrito.DataSource = items;
-
-            // Actualizar total en lblNum
-            decimal total = CarritoManager.Instancia.Items.Sum(i => i.Total);
-            lblNum.Text = total.ToString("C2");
-        }
-
-
-        private void DgvCarrito_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
-
-            var id = dgvCarrito.Rows[e.RowIndex].Cells["IdMedicamento"].Value.ToString();
-            var item = CarritoManager.Instancia.Items.FirstOrDefault(i => i.Medicamento.IdMedicamento == id);
-            if (item == null) return;
-
-            // Botón "-"
-            if (dgvCarrito.Columns[e.ColumnIndex].Name == "btnMenos")
-            {
-                if (item.Cantidad > 1)
-                {
-                    CarritoManager.Instancia.ModificarCantidad(id, item.Cantidad - 1);
-                    CargarCarrito();
-                }
-            }
-
-            // Botón "+"
-            else if (dgvCarrito.Columns[e.ColumnIndex].Name == "btnMas")
-            {
-                if (item.Cantidad < item.Medicamento.CantidadDisponible)
-                {
-                    CarritoManager.Instancia.ModificarCantidad(id, item.Cantidad + 1);
-                    CargarCarrito();
-                }
-            }
-
-            // Botón eliminar
-            else if (dgvCarrito.Columns[e.ColumnIndex].Name == "btnEliminar")
-            {
-                CarritoManager.Instancia.Eliminar(id);
-                CargarCarrito();
             }
         }
     }

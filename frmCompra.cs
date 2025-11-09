@@ -2,13 +2,8 @@
 using Laboratorio_4.Servicios;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Laboratorio_4
@@ -18,118 +13,139 @@ namespace Laboratorio_4
         public frmCompra()
         {
             InitializeComponent();
-            ConfigurarDataGridView();
-            cargarInventario();
+            ConfigurarFlowLayout();
+            CargarCatalogo();
         }
 
-        private void cargarInventario()
+        private void ConfigurarFlowLayout()
         {
+            // Configura el flowLayoutPanel1 desde código por si algo se resetea en el diseñador
+            flowLayoutPanel1.Dock = DockStyle.Fill;
+            flowLayoutPanel1.AutoScroll = true;
+            flowLayoutPanel1.WrapContents = true;
+            flowLayoutPanel1.FlowDirection = FlowDirection.LeftToRight;
+            flowLayoutPanel1.BackColor = Color.LightGray;
+        }
+
+        private void CargarCatalogo()
+        {
+            flowLayoutPanel1.Controls.Clear();
+
             using (var conexion = new ConexionBD())
             {
                 var dao = new MedicamentosDAO(conexion);
                 var lista = dao.ObtenerTodos();
-                dgvCatalogo.DataSource = lista;
+
+                foreach (var medicamento in lista)
+                {
+                    var tarjeta = CrearTarjetaMedicamento(medicamento);
+                    flowLayoutPanel1.Controls.Add(tarjeta);
+                }
             }
         }
 
-        private void ConfigurarDataGridView()
+        private Panel CrearTarjetaMedicamento(Medicamento medicamento)
         {
-            dgvCatalogo.AutoGenerateColumns = false;
-
-            dgvCatalogo.Columns.Clear();
-            dgvCatalogo.RowTemplate.Height = 80;
-
-            dgvCatalogo.Columns.Add(new DataGridViewTextBoxColumn
+            // Panel principal de la tarjeta
+            var card = new Panel
             {
-                DataPropertyName = "IdMedicamento",
-                HeaderText = "ID",
-                Visible = false
-            });
-
-
-            dgvCatalogo.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                DataPropertyName = "Nombre",
-                HeaderText = "Medicamento",
-                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
-            });
-
-            var imgCol = new DataGridViewImageColumn
-            {
-                DataPropertyName = "Imagen",
-                HeaderText = "Imagen",
-                ImageLayout = DataGridViewImageCellLayout.Zoom,
-                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+                Width = 220,
+                Height = 320,
+                BackColor = Color.White,
+                Margin = new Padding(10),
+                BorderStyle = BorderStyle.FixedSingle
             };
-            dgvCatalogo.Columns.Add(imgCol);
 
-
-            dgvCatalogo.Columns.Add(new DataGridViewTextBoxColumn
+            // Imagen
+            var pb = new PictureBox
             {
-                DataPropertyName = "CantidadDisponible",
-                HeaderText = "Disponible"
-            });
-
-            dgvCatalogo.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                DataPropertyName = "PrecioUnitario",
-                HeaderText = "Precio"
-            });
-
-            // 🔹 Columna con botón "+"
-            var colAgregar = new DataGridViewButtonColumn
-            {
-                HeaderText = "Agregar",
-                Text = "+",
-                UseColumnTextForButtonValue = true,
-                Width = 80
+                Width = 200,
+                Height = 150,
+                Top = 10,
+                Left = 10,
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Image = CargarImagen(medicamento.Imagen)
             };
-            dgvCatalogo.Columns.Add(colAgregar);
 
-            dgvCatalogo.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvCatalogo.ReadOnly = true;
-        }
-
-        private void dgvCatalogo_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex >= 0 && dgvCatalogo.Columns[e.ColumnIndex] is DataGridViewButtonColumn)
+            // Nombre del medicamento
+            var lblNombre = new Label
             {
-                var medicamento = (Medicamento)dgvCatalogo.Rows[e.RowIndex].DataBoundItem;
+                Text = medicamento.Nombre,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                AutoSize = false,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Width = 200,
+                Height = 40,
+                Top = pb.Bottom + 5,
+                Left = 10,
+                BackColor = Color.Transparent
+            };
+
+            // Precio
+            var lblPrecio = new Label
+            {
+                Text = $"Precio: ${medicamento.PrecioUnitario:F2}",
+                Font = new Font("Segoe UI", 9),
+                AutoSize = false,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Width = 200,
+                Height = 25,
+                Top = lblNombre.Bottom + 5,
+                Left = 10,
+                BackColor = Color.Transparent
+            };
+
+            // Botón de agregar al carrito
+            var btnAgregar = new Button
+            {
+                Text = "Agregar 🛒",
+                Width = 200,
+                Height = 35,
+                Top = lblPrecio.Bottom + 5,
+                Left = 10,
+                BackColor = Color.FromArgb(0, 120, 215),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnAgregar.FlatAppearance.BorderSize = 0;
+
+            btnAgregar.Click += (s, e) =>
+            {
                 CarritoManager.Instancia.Agregar(medicamento);
                 MessageBox.Show($"{medicamento.Nombre} agregado al carrito.");
-            }
-        }
+            };
 
-        private void dgvCatalogo_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
-        {
-            if (dgvCatalogo.Columns[e.ColumnIndex].HeaderText == "Imagen" && e.Value != null)
+            card.MouseLeave += (s, e) =>
             {
-                try
-                {
-                    string rutaImg = Path.Combine(Application.StartupPath, @"..\..\img\");
-                    string ruta = Path.Combine(rutaImg, e.Value.ToString());
+                card.BackColor = Color.White;
+                card.BorderStyle = BorderStyle.FixedSingle;
+            };
 
-                    if (File.Exists(ruta))
-                    {
-                        using (var tempImage = Image.FromFile(ruta))
-                        {
-                            e.Value = new Bitmap(tempImage);
-                        }
-                    }
-                    else
-                    {
-                        // Si el archivo no existe, dejar la celda vacía
-                        e.Value = null;
-                    }
-                }
-                catch
-                {
-                    // Si hay algún error (imagen dañada, ruta incorrecta, etc.)
-                    e.Value = null;
-                }
-            }
+            // Agregar controles dentro del panel
+            card.Controls.Add(pb);
+            card.Controls.Add(lblNombre);
+            card.Controls.Add(lblPrecio);
+            card.Controls.Add(btnAgregar);
+
+            return card;
         }
 
+        private Image CargarImagen(string nombreArchivo)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(nombreArchivo))
+                    return null;
 
+                string rutaImg = Path.Combine(Application.StartupPath, @"..\..\img\", nombreArchivo);
+                if (File.Exists(rutaImg))
+                    return Image.FromFile(rutaImg);
+            }
+            catch
+            {
+                // Ignorar errores de imagen
+            }
+            return null;
+        }
     }
 }
