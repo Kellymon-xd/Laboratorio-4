@@ -38,9 +38,10 @@
             // lblPedidos
             // 
             this.lblPedidos.AutoSize = true;
+            this.lblPedidos.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblPedidos.Location = new System.Drawing.Point(41, 40);
             this.lblPedidos.Name = "lblPedidos";
-            this.lblPedidos.Size = new System.Drawing.Size(45, 13);
+            this.lblPedidos.Size = new System.Drawing.Size(57, 17);
             this.lblPedidos.TabIndex = 0;
             this.lblPedidos.Text = "Pedidos";
             // 
@@ -56,18 +57,21 @@
             // lblCliente
             // 
             this.lblCliente.AutoSize = true;
+            this.lblCliente.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblCliente.Location = new System.Drawing.Point(511, 35);
             this.lblCliente.Name = "lblCliente";
-            this.lblCliente.Size = new System.Drawing.Size(39, 13);
+            this.lblCliente.Size = new System.Drawing.Size(51, 17);
             this.lblCliente.TabIndex = 4;
             this.lblCliente.Text = "Cliente";
             // 
             // cboCliente
             // 
+            this.cboCliente.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.cboCliente.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cboCliente.FormattingEnabled = true;
-            this.cboCliente.Location = new System.Drawing.Point(556, 32);
+            this.cboCliente.Location = new System.Drawing.Point(568, 32);
             this.cboCliente.Name = "cboCliente";
-            this.cboCliente.Size = new System.Drawing.Size(121, 21);
+            this.cboCliente.Size = new System.Drawing.Size(121, 25);
             this.cboCliente.TabIndex = 5;
             this.cboCliente.SelectedIndexChanged += new System.EventHandler(this.cboCliente_SelectedIndexChanged);
             // 

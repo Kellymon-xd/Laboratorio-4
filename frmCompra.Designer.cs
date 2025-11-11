@@ -36,11 +36,12 @@
             // lblMedicamentos
             // 
             this.lblMedicamentos.AutoSize = true;
+            this.lblMedicamentos.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblMedicamentos.Location = new System.Drawing.Point(30, 39);
             this.lblMedicamentos.Name = "lblMedicamentos";
-            this.lblMedicamentos.Size = new System.Drawing.Size(76, 13);
+            this.lblMedicamentos.Size = new System.Drawing.Size(98, 17);
             this.lblMedicamentos.TabIndex = 4;
-            this.lblMedicamentos.Text = "Medicamnetos";
+            this.lblMedicamentos.Text = "Medicamentos";
             // 
             // dgvCatalogo
             // 

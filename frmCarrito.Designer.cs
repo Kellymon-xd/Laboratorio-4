@@ -39,49 +39,60 @@
             // 
             this.dgvCarrito.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
             this.dgvCarrito.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvCarrito.Location = new System.Drawing.Point(26, 27);
+            this.dgvCarrito.Location = new System.Drawing.Point(35, 35);
+            this.dgvCarrito.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.dgvCarrito.Name = "dgvCarrito";
-            this.dgvCarrito.Size = new System.Drawing.Size(741, 226);
+            this.dgvCarrito.Size = new System.Drawing.Size(988, 296);
             this.dgvCarrito.TabIndex = 0;
             // 
             // lblTotal
             // 
             this.lblTotal.AutoSize = true;
-            this.lblTotal.Location = new System.Drawing.Point(38, 290);
+            this.lblTotal.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblTotal.Location = new System.Drawing.Point(51, 379);
+            this.lblTotal.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblTotal.Name = "lblTotal";
-            this.lblTotal.Size = new System.Drawing.Size(37, 13);
+            this.lblTotal.Size = new System.Drawing.Size(47, 17);
             this.lblTotal.TabIndex = 1;
             this.lblTotal.Text = "Total: ";
             // 
             // btnPedir
             // 
-            this.btnPedir.Location = new System.Drawing.Point(41, 332);
+            this.btnPedir.BackColor = System.Drawing.Color.DodgerBlue;
+            this.btnPedir.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnPedir.ForeColor = System.Drawing.Color.White;
+            this.btnPedir.Location = new System.Drawing.Point(55, 434);
+            this.btnPedir.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnPedir.Name = "btnPedir";
-            this.btnPedir.Size = new System.Drawing.Size(108, 23);
+            this.btnPedir.Size = new System.Drawing.Size(144, 30);
             this.btnPedir.TabIndex = 2;
             this.btnPedir.Text = "Realizar Pedido";
-            this.btnPedir.UseVisualStyleBackColor = true;
+            this.btnPedir.UseVisualStyleBackColor = false;
             this.btnPedir.Click += new System.EventHandler(this.btnPedir_Click);
             // 
             // lblNum
             // 
             this.lblNum.AutoSize = true;
-            this.lblNum.Location = new System.Drawing.Point(112, 290);
+            this.lblNum.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblNum.Location = new System.Drawing.Point(149, 379);
+            this.lblNum.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblNum.Name = "lblNum";
-            this.lblNum.Size = new System.Drawing.Size(28, 13);
+            this.lblNum.Size = new System.Drawing.Size(33, 17);
             this.lblNum.TabIndex = 3;
             this.lblNum.Text = "0.00";
             // 
             // frmCarrito
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(1067, 588);
             this.Controls.Add(this.lblNum);
             this.Controls.Add(this.btnPedir);
             this.Controls.Add(this.lblTotal);
             this.Controls.Add(this.dgvCarrito);
+            this.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "frmCarrito";

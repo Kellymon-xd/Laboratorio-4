@@ -48,17 +48,20 @@
             // lblMedicamentos
             // 
             this.lblMedicamentos.AutoSize = true;
-            this.lblMedicamentos.Location = new System.Drawing.Point(29, 45);
+            this.lblMedicamentos.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblMedicamentos.Location = new System.Drawing.Point(29, 26);
             this.lblMedicamentos.Name = "lblMedicamentos";
-            this.lblMedicamentos.Size = new System.Drawing.Size(76, 13);
+            this.lblMedicamentos.Size = new System.Drawing.Size(98, 17);
             this.lblMedicamentos.TabIndex = 1;
             this.lblMedicamentos.Text = "Medicamentos";
             // 
             // btnAgregar
             // 
+            this.btnAgregar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnAgregar.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnAgregar.Location = new System.Drawing.Point(694, 20);
             this.btnAgregar.Name = "btnAgregar";
-            this.btnAgregar.Size = new System.Drawing.Size(75, 23);
+            this.btnAgregar.Size = new System.Drawing.Size(75, 29);
             this.btnAgregar.TabIndex = 2;
             this.btnAgregar.Text = "➕";
             this.btnAgregar.UseVisualStyleBackColor = true;
