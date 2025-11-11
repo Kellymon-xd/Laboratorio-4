@@ -124,6 +124,14 @@ namespace Laboratorio_4
 
                 CargarMedicamentos();
             }
+            else if (dgvMedicamentos.Columns[e.ColumnIndex].HeaderText == "Editar")
+            {
+                var medicamento = (Medicamento)dgvMedicamentos.Rows[e.RowIndex].DataBoundItem;
+                frmMedicamento frm = new frmMedicamento(2);
+                frm.setDatos(medicamento);
+                frm.Show();
+
+            }
         }
 
 
