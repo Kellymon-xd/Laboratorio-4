@@ -1,573 +1,540 @@
-USE master;
-GO
-
--- ============================================================
+-- ============================================
 -- CREAR BASE DE DATOS
--- ============================================================
-CREATE DATABASE Clinica
-COLLATE Modern_Spanish_CI_AI;
-GO
+-- ============================================
+CREATE DATABASE farmacia
+    WITH OWNER = postgres
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'es_ES.UTF-8'
+    LC_CTYPE = 'es_ES.UTF-8'
+    TEMPLATE = template0;
+\connect farmacia;
 
-USE Clinica;
-GO
-
--- ============================================================
--- TABLA ROL
--- ============================================================
-CREATE TABLE ROL (
-    Id_Rol TINYINT IDENTITY(1,1) PRIMARY KEY,
-    Descripcion_Rol VARCHAR(30) NOT NULL UNIQUE
+-- ============================================
+-- TABLA ROLES
+-- ============================================
+CREATE TABLE rol (
+    id_rol SERIAL PRIMARY KEY,
+    descripcion_rol VARCHAR(30) NOT NULL UNIQUE
 );
-INSERT INTO ROL (Descripcion_Rol)
-VALUES ('Administrador'), ('Medico'), ('Secretario');
-GO
 
--- ============================================================
--- SECUENCIA GLOBAL PARA Id_Usuario
--- ============================================================
-CREATE SEQUENCE dbo.Seq_IdUsuario
-    AS INT
-    START WITH 1
-    INCREMENT BY 1;
-GO
+INSERT INTO rol (descripcion_rol)
+VALUES ('Administrador'), ('Cliente');
 
--- ============================================================
--- TABLA USUARIOS (solo roles internos)
--- ============================================================
-CREATE TABLE USUARIOS (
-    Id_Usuario CHAR(8) PRIMARY KEY, -- generado por trigger
-    Nombre NVARCHAR(100) NOT NULL,
-    Apellido NVARCHAR(100) NOT NULL,
-    Email NVARCHAR(255) NOT NULL CONSTRAINT UQ_USUARIOS_Email UNIQUE,
-    Cedula VARCHAR(30) NOT NULL CONSTRAINT UQ_USUARIOS_Cedula UNIQUE,
-    Telefono VARCHAR(30) NULL,
-    Contrasena VARCHAR(128) NOT NULL, -- hash (SHA2_256 HEX)
-    Id_Rol TINYINT NOT NULL,
-    Fecha_Registro DATETIME NOT NULL CONSTRAINT DF_Usuarios_Fecha DEFAULT GETDATE(),
-	PedirContraseña BIT DEFAULT 1,
-    CONSTRAINT FK_Usuarios_Rol FOREIGN KEY (Id_Rol) REFERENCES ROL(Id_Rol),
-    CONSTRAINT CHK_EmailFormatoBasico CHECK (Email LIKE '_%@_%._%' AND Email NOT LIKE '% %')
+-- ============================================
+-- SECUENCIAS POR ROL
+-- ============================================
+CREATE SEQUENCE seq_idusuario_admin START 1;
+CREATE SEQUENCE seq_idusuario_cliente START 1;
+
+-- ============================================
+-- TABLA USUARIOS
+-- ============================================
+CREATE TABLE usuarios (
+    id_usuario CHAR(8) PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    apellido VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    contraseña VARCHAR(64) NOT NULL,
+    id_rol INT NOT NULL REFERENCES rol(id_rol),
+    CHECK (nombre ~ '^[A-Za-z áéíóúÁÉÍÓÚñÑ]+$'),
+    CHECK (apellido ~ '^[A-Za-z áéíóúÁÉÍÓÚñÑ]+$'),
+    CHECK (email LIKE '_%@_%._%' AND email NOT LIKE '% %')
 );
-GO
 
--- ============================================================
--- TABLA ACTIVIDAD_USUARIOS
--- ============================================================
-CREATE TABLE ACTIVIDAD_USUARIOS (
-    Id_Usuario CHAR(8) PRIMARY KEY,
-    Activo BIT NOT NULL CONSTRAINT DF_Activo DEFAULT 1,
-    Bloqueado BIT NOT NULL CONSTRAINT DF_Bloqueado DEFAULT 0,
-    Intentos_Fallidos INT NOT NULL CONSTRAINT DF_Intentos DEFAULT 0,
-    Fecha_Bloqueo DATETIME NULL,
-    Ultima_Actividad DATETIME NULL,
-    CONSTRAINT FK_Actividad_Usuarios FOREIGN KEY (Id_Usuario) REFERENCES USUARIOS(Id_Usuario)
+-- ============================================
+-- TABLA MEDICAMENTOS
+-- ============================================
+CREATE TABLE medicamentos (
+    id_medicamento SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
+    imagen VARCHAR(255),
+    cantidad_disponible INT NOT NULL CHECK (cantidad_disponible >= 0),
+    precio_unitario NUMERIC(10,2) NOT NULL CHECK (precio_unitario >= 0),
+    habilitado BOOLEAN NOT NULL DEFAULT TRUE
 );
-GO
 
--- ============================================================
--- TRIGGER: Insert usuario → genera Id_Usuario (sin pacientes)
--- ============================================================
-CREATE TRIGGER dbo.TRG_Insert_Usuario_Clinica
-ON dbo.USUARIOS
-INSTEAD OF INSERT
-AS
+-- ============================================
+-- TABLA PEDIDOS
+-- ============================================
+CREATE TABLE pedidos (
+    id_pedido SERIAL PRIMARY KEY,
+    id_cliente CHAR(8) NOT NULL REFERENCES usuarios(id_usuario),
+    fecha_pedido TIMESTAMP DEFAULT NOW(),
+    total NUMERIC(10,2) NOT NULL CHECK (total >= 0)
+);
+
+-- ============================================
+-- TABLA DETALLE_PEDIDO
+-- ============================================
+CREATE TABLE detalle_pedido (
+    id_detalle SERIAL PRIMARY KEY,
+    id_pedido INT NOT NULL REFERENCES pedidos(id_pedido) ON DELETE CASCADE,
+    id_medicamento INT NOT NULL REFERENCES medicamentos(id_medicamento),
+    cantidad INT NOT NULL CHECK (cantidad > 0),
+    subtotal NUMERIC(10,2) NOT NULL CHECK (subtotal >= 0)
+);
+
+-- ============================================
+-- INVENTARIO INICIAL
+-- ============================================
+INSERT INTO medicamentos(nombre, imagen, cantidad_disponible, precio_unitario)
+VALUES
+('Paracetamol', 'paracetamol.jpg', 100, 0.50),
+('Ibuprofeno', 'ibuprofeno.jpg', 50, 1.20),
+('Amoxicilina', 'amoxicilina.jpg', 30, 2.50),
+('Loratadina', 'loratadina.jpg', 75, 0.75),
+('Omeprazol', 'omeprazol.jpg', 200, 0.60);
+
+
+-- ============================================
+-- TRIGGER PARA GENERAR ID_USUARIO SEGÚN ROL
+-- ============================================
+CREATE FUNCTION generar_id_usuario()
+RETURNS TRIGGER AS $$
+DECLARE
+    nuevo_id CHAR(8);
 BEGIN
-    SET NOCOUNT ON;
+    IF NEW.id_rol = 1 THEN
+        nuevo_id := 'A' || LPAD(NEXTVAL('seq_idusuario_admin')::TEXT, 7, '0');
+    ELSIF NEW.id_rol = 2 THEN
+        nuevo_id := 'C' || LPAD(NEXTVAL('seq_idusuario_cliente')::TEXT, 7, '0');
+    END IF;
 
-    DECLARE @tmp TABLE (
-        Nombre NVARCHAR(100),
-        Apellido NVARCHAR(100),
-        Email NVARCHAR(255),
-        Cedula VARCHAR(30),
-        Telefono VARCHAR(30),
-        Contrasena VARCHAR(128),
-        Id_Rol TINYINT,
-        Id_Usuario CHAR(8)
-    );
+    NEW.id_usuario := nuevo_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-    INSERT INTO @tmp (Nombre, Apellido, Email, Cedula, Telefono, Contrasena, Id_Rol, Id_Usuario)
+CREATE TRIGGER trg_generar_id_usuario
+BEFORE INSERT ON usuarios
+FOR EACH ROW
+EXECUTE FUNCTION generar_id_usuario();
+
+-- ============================================
+-- FUNCIONES / PROCEDIMIENTOS
+-- ============================================
+
+
+-- 🧪 Agregar nuevo medicamento
+CREATE FUNCTION agregar_medicamento(
+    p_nombre VARCHAR,
+    p_imagen VARCHAR,
+    p_cantidad INT,
+    p_precio NUMERIC
+) RETURNS TEXT AS $$
+BEGIN
+    BEGIN
+        INSERT INTO medicamentos(nombre, imagen, cantidad_disponible, precio_unitario)
+        VALUES (p_nombre, p_imagen, p_cantidad, p_precio);
+        RETURN '✅ Medicamento agregado correctamente.';
+    EXCEPTION
+        WHEN unique_violation THEN
+            RETURN '❌ Error: el medicamento ya existe.';
+        WHEN check_violation THEN
+            RETURN '❌ Error: algún valor no cumple las restricciones.';
+        WHEN others THEN
+            RETURN '❌ Error desconocido al agregar medicamento.';
+    END;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 🧱 Modificar medicamento
+CREATE FUNCTION modificar_medicamento(
+    p_id INT,
+    p_nombre VARCHAR DEFAULT NULL,
+    p_imagen VARCHAR DEFAULT NULL,
+    p_cantidad INT DEFAULT NULL,
+    p_precio NUMERIC DEFAULT NULL
+) RETURNS TEXT AS $$
+BEGIN
+    BEGIN
+        UPDATE medicamentos
+        SET nombre = COALESCE(p_nombre, nombre),
+            imagen = COALESCE(p_imagen, imagen),
+            cantidad_disponible = COALESCE(p_cantidad, cantidad_disponible),
+            precio_unitario = COALESCE(p_precio, precio_unitario)
+        WHERE id_medicamento = p_id;
+
+        IF NOT FOUND THEN
+            RETURN '❌ Error: medicamento no encontrado.';
+        END IF;
+
+        RETURN '✅ Medicamento modificado correctamente.';
+    EXCEPTION
+        WHEN unique_violation THEN
+            RETURN '❌ Error: el nombre ya existe para otro medicamento.';
+        WHEN check_violation THEN
+            RETURN '❌ Error: algún valor no cumple las restricciones.';
+        WHEN others THEN
+            RETURN '❌ Error desconocido al modificar medicamento.';
+    END;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- 🧱 Eliminar medicamento
+CREATE FUNCTION eliminar_medicamento(p_id INT)
+RETURNS TEXT AS $$
+BEGIN
+    BEGIN
+        DELETE FROM medicamentos WHERE id_medicamento = p_id;
+        IF NOT FOUND THEN
+            RETURN '❌ Error: medicamento no encontrado.';
+        END IF;
+        RETURN '✅ Medicamento eliminado correctamente.';
+    EXCEPTION
+        WHEN others THEN
+            RETURN '❌ Error desconocido al eliminar medicamento.';
+    END;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 🔁 Reabastecer inventario
+CREATE FUNCTION reabastecer_medicamento(p_id INT, p_cantidad INT)
+RETURNS TEXT AS $$
+BEGIN
+    BEGIN
+        UPDATE medicamentos
+        SET cantidad_disponible = cantidad_disponible + p_cantidad
+        WHERE id_medicamento = p_id;
+
+        IF NOT FOUND THEN
+            RETURN '❌ Error: medicamento no encontrado.';
+        END IF;
+
+        RETURN '✅ Inventario reabastecido correctamente.';
+    EXCEPTION
+        WHEN others THEN
+            RETURN '❌ Error desconocido al reabastecer medicamento.';
+    END;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 🧾 Registrar pedido (con descuento automático de stock)
+CREATE FUNCTION registrar_pedido(
+    p_id_cliente CHAR(8),
+    p_medicamentos INT[],
+    p_cantidades INT[]
+) RETURNS TEXT AS $$
+DECLARE
+    i INT;
+    v_total NUMERIC(10,2) := 0;
+    v_subtotal NUMERIC(10,2);
+    v_precio NUMERIC(10,2);
+    v_pedido_id INT;
+BEGIN
+    BEGIN
+        INSERT INTO pedidos(id_cliente, total) VALUES (p_id_cliente, 0)
+        RETURNING id_pedido INTO v_pedido_id;
+
+        FOR i IN 1..array_length(p_medicamentos,1) LOOP
+            SELECT precio_unitario INTO v_precio FROM medicamentos
+            WHERE id_medicamento = p_medicamentos[i];
+
+            IF NOT FOUND THEN
+                RAISE EXCEPTION '❌ Error: medicamento ID % no encontrado.', p_medicamentos[i];
+            END IF;
+
+            v_subtotal := v_precio * p_cantidades[i];
+            v_total := v_total + v_subtotal;
+
+            INSERT INTO detalle_pedido(id_pedido, id_medicamento, cantidad, subtotal)
+            VALUES (v_pedido_id, p_medicamentos[i], p_cantidades[i], v_subtotal);
+
+            UPDATE medicamentos
+            SET cantidad_disponible = cantidad_disponible - p_cantidades[i]
+            WHERE id_medicamento = p_medicamentos[i];
+        END LOOP;
+
+        UPDATE pedidos SET total = v_total WHERE id_pedido = v_pedido_id;
+
+        RETURN '✅ Pedido registrado correctamente.';
+    EXCEPTION
+        WHEN check_violation THEN
+            RETURN '❌ Error: violación de restricción en pedido.';
+        WHEN foreign_key_violation THEN
+            RETURN '❌ Error: cliente o medicamento no existe.';
+        WHEN others THEN
+            RETURN '❌ Error desconocido al registrar pedido.';
+    END;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ============================================
+-- VISTA DE INVENTARIO
+-- ============================================
+
+CREATE VIEW vista_inventario AS
+SELECT 
+    id_medicamento, 
+    nombre, 
+    imagen, 
+    cantidad_disponible, 
+    precio_unitario
+FROM medicamentos
+WHERE habilitado = TRUE;
+
+-- ============================================
+-- VISTA DE CLIENTES CON ID
+-- ============================================
+
+CREATE VIEW vista_clientes AS
+SELECT
+    id_usuario,
+    nombre || ' ' || apellido AS nombre_completo
+FROM usuarios
+WHERE id_rol = 2;  -- solo clientes
+
+-- ============================================
+-- FUNCION PEDIDOS POR CLIENTE
+-- ============================================
+
+CREATE FUNCTION pedidos_por_cliente(p_id_cliente CHAR(8))
+RETURNS TABLE(
+    id_pedido INT,
+    medicamento VARCHAR,
+    cantidad INT,
+    subtotal NUMERIC(10,2),
+    total NUMERIC(10,2),
+    fecha_pedido TIMESTAMP
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        p.id_pedido,
+        m.nombre AS medicamento,
+        d.cantidad,
+        d.subtotal,
+        p.total,
+        p.fecha_pedido
+    FROM pedidos p
+    JOIN detalle_pedido d ON d.id_pedido = p.id_pedido
+    JOIN medicamentos m ON d.id_medicamento = m.id_medicamento
+    WHERE p.id_cliente = p_id_cliente
+    ORDER BY p.fecha_pedido DESC;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- ============================================
+-- FUNCION DE LOG IN
+-- ============================================
+
+CREATE FUNCTION login_usuario(
+    p_email VARCHAR,
+    p_password VARCHAR
+)
+RETURNS TABLE(
+    id_usuario CHAR(8),
+    nombre VARCHAR,
+    apellido VARCHAR,
+    id_rol INT,
+    mensaje TEXT
+) AS $$
+BEGIN
+    -- Verificar si el correo existe
+    IF NOT EXISTS (SELECT 1 FROM usuarios WHERE email = p_email) THEN
+        RETURN QUERY SELECT NULL::CHAR(8), NULL::VARCHAR, NULL::VARCHAR, NULL::INT, '❌ Error: correo no existe.';
+        RETURN;
+    END IF;
+
+    -- Verificar contraseña
+    IF NOT EXISTS (SELECT 1 FROM usuarios WHERE email = p_email AND contraseña = p_password) THEN
+        RETURN QUERY SELECT NULL::CHAR(8), NULL::VARCHAR, NULL::VARCHAR, NULL::INT, '❌ Error: contraseña incorrecta.';
+        RETURN;
+    END IF;
+
+    -- Si todo es correcto, usa alias
+    RETURN QUERY
+    SELECT u.id_usuario, u.nombre, u.apellido, u.id_rol, '✅ Login exitoso'
+    FROM usuarios u
+    WHERE u.email = p_email;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- ============================================
+-- FUNCION DE CREAR USUARIO CON VALIDACIONES Y MENSAJES
+-- ============================================
+CREATE OR REPLACE FUNCTION crear_usuario(
+    p_nombre VARCHAR,
+    p_apellido VARCHAR,
+    p_email VARCHAR,
+    p_contraseña VARCHAR,
+    p_id_rol INT
+)
+RETURNS TABLE (
+    exito BOOLEAN,
+    mensaje TEXT
+) AS $$
+BEGIN
+    -- Validar rol
+    IF NOT EXISTS (SELECT 1 FROM rol WHERE id_rol = p_id_rol) THEN
+        RETURN QUERY SELECT FALSE, 'Error: el rol no existe.';
+        RETURN;
+    END IF;
+
+    -- Validaciones previas
+    IF p_nombre !~ '^[A-Za-z áéíóúÁÉÍÓÚñÑ]+$' THEN
+        RETURN QUERY SELECT FALSE, 'Error: el nombre solo puede contener letras y espacios.';
+        RETURN;
+    END IF;
+
+    IF p_apellido !~ '^[A-Za-z áéíóúÁÉÍÓÚñÑ]+$' THEN
+        RETURN QUERY SELECT FALSE, 'Error: el apellido solo puede contener letras y espacios.';
+        RETURN;
+    END IF;
+
+    IF p_email NOT LIKE '_%@_%._%' OR p_email LIKE '% %' THEN
+        RETURN QUERY SELECT FALSE, 'Error: formato de correo inválido.';
+        RETURN;
+    END IF;
+
+    IF LENGTH(p_contraseña) < 5 THEN
+        RETURN QUERY SELECT FALSE, 'Error: la contraseña debe tener al menos 5 caracteres.';
+        RETURN;
+    END IF;
+
+    -- Insertar usuario
+    BEGIN
+        INSERT INTO usuarios(nombre, apellido, email, contraseña, id_rol)
+        VALUES (p_nombre, p_apellido, p_email, p_contraseña, p_id_rol);
+
+        RETURN QUERY SELECT TRUE, 'Usuario creado correctamente.';
+    EXCEPTION
+        WHEN unique_violation THEN
+            RETURN QUERY SELECT FALSE, 'Error: el correo ya está registrado.';
+        WHEN others THEN
+            RETURN QUERY SELECT FALSE, 'Error desconocido al crear el usuario.';
+    END;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ============================================
+-- VISTA DE PEDIDOS
+-- ============================================
+
+CREATE VIEW vista_pedidos_resumen AS
+SELECT 
+    p.id_pedido,
+    u.nombre || ' ' || u.apellido AS cliente,
+    p.total,
+    p.fecha_pedido
+FROM pedidos p
+JOIN usuarios u ON p.id_cliente = u.id_usuario;
+
+
+-- ============================================
+-- FUNCION PARA OBTENER INFO DE PEDIDO
+-- ============================================
+
+CREATE FUNCTION obtener_pedido_por_id(p_id_pedido INT)
+RETURNS TABLE(
+    id_pedido INT,
+    cliente VARCHAR,
+    fecha TIMESTAMP,
+    total NUMERIC(10,2)
+) AS $$
+BEGIN
+    RETURN QUERY
     SELECT 
-        i.Nombre, i.Apellido, i.Email, i.Cedula, i.Telefono, i.Contrasena, i.Id_Rol,
-        CASE i.Id_Rol
-            WHEN 1 THEN 'A' + RIGHT('0000000' + CAST(NEXT VALUE FOR dbo.Seq_IdUsuario AS VARCHAR(7)),7)
-            WHEN 2 THEN 'M' + RIGHT('0000000' + CAST(NEXT VALUE FOR dbo.Seq_IdUsuario AS VARCHAR(7)),7)
-            WHEN 3 THEN 'S' + RIGHT('0000000' + CAST(NEXT VALUE FOR dbo.Seq_IdUsuario AS VARCHAR(7)),7)
-            ELSE 'U' + RIGHT('0000000' + CAST(NEXT VALUE FOR dbo.Seq_IdUsuario AS VARCHAR(7)),7)
-        END
-    FROM inserted i;
-
-    INSERT INTO dbo.USUARIOS (Id_Usuario, Nombre, Apellido, Email, Cedula, Telefono, Contrasena, Id_Rol, Fecha_Registro)
-    SELECT Id_Usuario, Nombre, Apellido, Email, Cedula, Telefono, Contrasena, Id_Rol, GETDATE()
-    FROM @tmp;
-
-    INSERT INTO dbo.ACTIVIDAD_USUARIOS (Id_Usuario, Activo, Bloqueado, Intentos_Fallidos, Ultima_Actividad)
-    SELECT Id_Usuario, 1, 0, 0, GETDATE()
-    FROM @tmp;
+        p.id_pedido,
+        u.nombre || ' ' || u.apellido AS cliente,
+        p.fecha_pedido,
+        p.total
+    FROM pedidos p
+    JOIN usuarios u ON p.id_cliente = u.id_usuario
+    WHERE p.id_pedido = p_id_pedido;
 END;
-GO
+$$ LANGUAGE plpgsql;
 
--- ============================================================
--- TABLAS COMPLEMENTARIAS
--- ============================================================
-CREATE TABLE ESPECIALIDADES(
-    ID_Especialidad INT IDENTITY PRIMARY KEY,
-    Nombre_Especialidad VARCHAR(50) NOT NULL,
-    Descripcion VARCHAR(200) NULL
-);
-GO
+-- ============================================
+-- FUNCION PARA OBTENER DETALLES DE PEDIDO
+-- ============================================
 
-CREATE TABLE TIPO_CONTRATO(
-    ID_Contrato INT IDENTITY PRIMARY KEY,
-    Descripcion VARCHAR(30) NOT NULL UNIQUE
-);
-INSERT INTO TIPO_CONTRATO(Descripcion) VALUES ('eventual'), ('permanente');
-GO
-
-CREATE TABLE ESTADO_SALUD(
-    ID_Estado INT IDENTITY PRIMARY KEY,
-    Descripcion VARCHAR(20) NOT NULL UNIQUE
-);
-INSERT INTO ESTADO_SALUD VALUES ('activo'), ('inactivo');
-GO
-
-CREATE TABLE ESTADO_CITA(
-    ID_Estado_Cita INT IDENTITY PRIMARY KEY,
-    Descripcion VARCHAR(30) NOT NULL UNIQUE
-);
-INSERT INTO ESTADO_CITA VALUES ('agendada'), ('atendida'), ('cancelada');
-GO
-
--- ============================================================
--- TABLA PACIENTES (independiente de USUARIOS)
--- ============================================================
-CREATE TABLE PACIENTES(
-    ID_Paciente INT IDENTITY PRIMARY KEY,
-    Nombre NVARCHAR(100) NOT NULL,
-    Apellido NVARCHAR(100) NOT NULL,
-    Cedula VARCHAR(30) NOT NULL UNIQUE,
-    Email NVARCHAR(255) NULL,
-    Telefono VARCHAR(30) NULL,
-    Fecha_Nacimiento DATE NOT NULL,
-    Sexo VARCHAR(10) NULL,
-    Direccion VARCHAR(200) NULL,
-    ContactoEmergencia VARCHAR(100) NULL,
-    Activo BIT NOT NULL DEFAULT 1
-);
-GO
-
--- ============================================================
--- TABLA MEDICOS (sí referencian USUARIOS)
--- ============================================================
-CREATE TABLE MEDICOS(
-    ID_Medico INT IDENTITY PRIMARY KEY,
-    Id_Usuario CHAR(8) NOT NULL UNIQUE,
-    ID_Especialidad INT NOT NULL,
-    ID_Contrato INT NOT NULL,
-    Horario_Atencion VARCHAR(200) NULL,
-    Telefono_Consulta VARCHAR(30) NULL,
-	Activo BIT NOT NULL DEFAULT 1,
-    CONSTRAINT FK_MEDICOS_USUARIOS FOREIGN KEY (Id_Usuario) REFERENCES USUARIOS(Id_Usuario),
-    CONSTRAINT FK_MEDICOS_ESPECIALIDAD FOREIGN KEY (ID_Especialidad) REFERENCES ESPECIALIDADES(ID_Especialidad),
-    CONSTRAINT FK_MEDICOS_CONTRATO FOREIGN KEY (ID_Contrato) REFERENCES TIPO_CONTRATO(ID_Contrato)
-);
-GO
-
--- ============================================================
--- CITAS (referencia pacientes y médicos)
--- ============================================================
-CREATE TABLE CITAS(
-    ID_Cita INT IDENTITY PRIMARY KEY,
-    ID_Paciente INT NOT NULL,
-    ID_Medico INT NOT NULL,
-    Fecha_Cita DATE NOT NULL,
-    Hora_Cita TIME NOT NULL,
-    ID_Estado_Cita INT NOT NULL,
-    CONSTRAINT FK_CITAS_PACIENTE FOREIGN KEY (ID_Paciente) REFERENCES PACIENTES(ID_Paciente),
-    CONSTRAINT FK_CITAS_MEDICO FOREIGN KEY (ID_Medico) REFERENCES MEDICOS(ID_Medico),
-    CONSTRAINT FK_CITAS_ESTADO FOREIGN KEY (ID_Estado_Cita) REFERENCES ESTADO_CITA(ID_Estado_Cita)
-);
-GO
-
--- ============================================================
--- Atención médica
--- ============================================================
-CREATE TABLE ATENCION_MEDICA(
-    ID_Atencion INT IDENTITY PRIMARY KEY,
-    ID_Cita INT NOT NULL,
-    Fecha_Atencion DATETIME NOT NULL DEFAULT GETDATE(),
-    Motivo_Consulta VARCHAR(300) NOT NULL,
-    Diagnostico VARCHAR(300) NULL,
-    Observaciones VARCHAR(400) NULL,
-    CONSTRAINT FK_ATENCION_CITA FOREIGN KEY (ID_Cita)
-        REFERENCES CITAS(ID_Cita)
-);
-GO
-
-
-CREATE TABLE ANTECEDENTES_MEDICOS(
-    ID_Antecedente INT IDENTITY PRIMARY KEY,
-    ID_Paciente INT NOT NULL UNIQUE,
-    Alergias VARCHAR(200) NULL,
-    Enfermedades_Cronicas VARCHAR(200) NULL,
-    Observaciones_Generales VARCHAR(300) NULL,
-    Fecha_Registro DATETIME NOT NULL DEFAULT GETDATE(),
-    CONSTRAINT FK_ANTECEDENTES_PACIENTE FOREIGN KEY (ID_Paciente)
-        REFERENCES PACIENTES(ID_Paciente)
-);
-GO
-
--- ============================================================
--- VISTAS
--- ============================================================
-CREATE OR ALTER VIEW vw_UsuariosClinica AS
-SELECT u.Id_Usuario, u.Nombre, u.Apellido, u.Email, u.Cedula, r.Descripcion_Rol AS Rol,
-       au.Activo, au.Bloqueado, au.Intentos_Fallidos, au.Ultima_Actividad
-FROM USUARIOS u
-LEFT JOIN ROL r ON u.Id_Rol = r.Id_Rol
-LEFT JOIN ACTIVIDAD_USUARIOS au ON u.Id_Usuario = au.Id_Usuario;
-GO
-
-CREATE OR ALTER VIEW vw_MedicosClinica AS
-SELECT m.ID_Medico, m.Id_Usuario, u.Nombre, u.Apellido, u.Email,
-       e.Nombre_Especialidad, t.Descripcion AS Contrato,
-       m.Horario_Atencion, m.Telefono_Consulta
-FROM MEDICOS m
-LEFT JOIN USUARIOS u ON m.Id_Usuario = u.Id_Usuario
-LEFT JOIN ESPECIALIDADES e ON m.ID_Especialidad = e.ID_Especialidad
-LEFT JOIN TIPO_CONTRATO t ON m.ID_Contrato = t.ID_Contrato;
-GO
-
-CREATE OR ALTER VIEW vw_PacientesClinica AS
-SELECT p.ID_Paciente, p.Nombre, p.Apellido, p.Cedula, p.Email,
-       p.Telefono, p.Fecha_Nacimiento, p.Sexo, p.Direccion,
-       p.ContactoEmergencia, es.Descripcion AS EstadoSalud
-FROM PACIENTES p
-LEFT JOIN ESTADO_SALUD es ON p.ID_Estado = es.ID_Estado;
-GO
-
-CREATE OR ALTER VIEW vw_CitasClinica AS
-SELECT c.ID_Cita, c.Fecha_Cita, c.Hora_Cita, ec.Descripcion AS EstadoCita,
-       p.Nombre + ' ' + p.Apellido AS Paciente,
-       m.ID_Medico, um.Nombre + ' ' + um.Apellido AS Medico
-FROM CITAS c
-INNER JOIN PACIENTES p ON c.ID_Paciente = p.ID_Paciente
-INNER JOIN MEDICOS m ON c.ID_Medico = m.ID_Medico
-LEFT JOIN USUARIOS um ON m.Id_Usuario = um.Id_Usuario
-LEFT JOIN ESTADO_CITA ec ON c.ID_Estado_Cita = ec.ID_Estado_Cita;
-GO
-
--- ============================================================
--- PROCEDIMIENTO LOGIN (solo usuarios del sistema)
--- ============================================================
-CREATE PROCEDURE dbo.sp_login_usuario_clinica
-    @Email NVARCHAR(255),
-    @PasswordHash VARCHAR(128)
-AS
+CREATE FUNCTION detalle_pedido_por_id(p_id_pedido INT)
+RETURNS TABLE(
+    medicamento VARCHAR,
+    cantidad INT,
+    subtotal NUMERIC(10,2)
+) AS $$
 BEGIN
-    SET NOCOUNT ON;
-
-    DECLARE @IdUsuario CHAR(8);
-
-    IF NOT EXISTS (SELECT 1 FROM USUARIOS WHERE Email = @Email)
-    BEGIN
-        RAISERROR('Usuario no existe.',16,1);
-        RETURN;
-    END
-
-    SELECT @IdUsuario = Id_Usuario FROM USUARIOS WHERE Email = @Email;
-
-    IF EXISTS (SELECT 1 FROM ACTIVIDAD_USUARIOS WHERE Id_Usuario = @IdUsuario AND Bloqueado = 1)
-    BEGIN
-        RAISERROR('Usuario bloqueado.',16,1);
-        RETURN;
-    END
-
-    IF EXISTS (
-        SELECT 1 FROM USUARIOS U
-        INNER JOIN ACTIVIDAD_USUARIOS AU ON U.Id_Usuario = AU.Id_Usuario
-        WHERE U.Email = @Email AND U.Contrasena = @PasswordHash AND AU.Activo = 1 AND AU.Bloqueado = 0
-    )
-    BEGIN
-        UPDATE ACTIVIDAD_USUARIOS
-        SET Intentos_Fallidos = 0, Ultima_Actividad = GETDATE()
-        WHERE Id_Usuario = @IdUsuario;
-
-        SELECT U.Id_Usuario, U.Nombre, U.Apellido, R.Descripcion_Rol
-        FROM USUARIOS U
-        INNER JOIN ROL R ON U.Id_Rol = R.Id_Rol
-        WHERE U.Id_Usuario = @IdUsuario;
-        RETURN;
-    END
-
-    UPDATE ACTIVIDAD_USUARIOS
-    SET Intentos_Fallidos = Intentos_Fallidos + 1,
-        Bloqueado = CASE WHEN Intentos_Fallidos + 1 >= 3 THEN 1 ELSE 0 END,
-        Fecha_Bloqueo = CASE WHEN Intentos_Fallidos + 1 >= 3 THEN GETDATE() ELSE NULL END
-    WHERE Id_Usuario = @IdUsuario;
-
-    IF EXISTS (SELECT 1 FROM ACTIVIDAD_USUARIOS WHERE Id_Usuario = @IdUsuario AND Bloqueado = 1)
-    BEGIN
-        RAISERROR('Usuario bloqueado por intentos fallidos.',16,1);
-        RETURN;
-    END
-
-    RAISERROR('Contraseña incorrecta.',16,1);
+    RETURN QUERY
+    SELECT 
+        m.nombre AS medicamento,
+        d.cantidad,
+        d.subtotal
+    FROM detalle_pedido d
+    JOIN medicamentos m ON d.id_medicamento = m.id_medicamento
+    WHERE d.id_pedido = p_id_pedido
+    ORDER BY d.id_detalle;
 END;
-GO
+$$ LANGUAGE plpgsql;
 
--- ============================================================
--- PROCEDIMIENTO GESTIÓN DE USUARIOS (solo admin)
--- ============================================================
-CREATE PROCEDURE dbo.sp_gestion_usuario_clinica
-    @Operacion CHAR(1),
-    @Id_Usuario CHAR(8) = NULL,
-    @Nombre NVARCHAR(100) = NULL,
-    @Apellido NVARCHAR(100) = NULL,
-    @Email NVARCHAR(255) = NULL,
-    @Cedula VARCHAR(30) = NULL,
-    @Telefono VARCHAR(30) = NULL,
-    @Contrasena VARCHAR(128) = NULL,
-    @Id_Rol TINYINT = NULL,
-    @Activo BIT = NULL,
-    @Bloqueado BIT = NULL
-AS
+-- ============================================
+-- FUNCION PARA ELIMINAR MEDICAMENTO
+-- ============================================
+
+CREATE OR REPLACE FUNCTION eliminar_medicamento(p_id INT)
+RETURNS TEXT AS $$
+DECLARE
+    tiene_relaciones BOOLEAN;
 BEGIN
-    SET NOCOUNT ON;
-    BEGIN TRY
-        BEGIN TRAN;
+    -- Verificar si el medicamento está referenciado en otras tablas
+    SELECT EXISTS (
+        SELECT 1 FROM detalle_pedido WHERE id_medicamento = p_id
+        UNION
+        SELECT 1 FROM detalle_pedido WHERE id_medicamento = p_id
+    ) INTO tiene_relaciones;
 
-        IF @Operacion = 'I'
-        BEGIN
-            -- Si existe un usuario con misma cédula inactivo → reactivar
-            IF EXISTS (SELECT 1 FROM USUARIOS WHERE Cedula = @Cedula AND Activo = 0)
-            BEGIN
-                UPDATE USUARIOS
-                SET Activo = 1,
-                    Nombre = @Nombre,
-                    Apellido = @Apellido,
-                    Email = @Email,
-                    Telefono = @Telefono,
-                    Contrasena = @Contrasena,
-                    Id_Rol = @Id_Rol,
-                    Fecha_Registro = GETDATE()
-                WHERE Cedula = @Cedula;
+    IF tiene_relaciones THEN
+        -- Solo deshabilitar si tiene relaciones
+        UPDATE medicamentos
+        SET habilitado = FALSE
+        WHERE id_medicamento = p_id;
 
-                UPDATE ACTIVIDAD_USUARIOS
-                SET Activo = 1, Bloqueado = 0, Intentos_Fallidos = 0, Ultima_Actividad = GETDATE()
-                WHERE Id_Usuario = (SELECT Id_Usuario FROM USUARIOS WHERE Cedula = @Cedula);
+        IF NOT FOUND THEN
+            RETURN '❌ Error: medicamento no encontrado.';
+        END IF;
 
-                SELECT 'Usuario reactivado correctamente.' AS Mensaje;
-            END
-            ELSE
-            BEGIN
-                INSERT INTO USUARIOS (Nombre, Apellido, Email, Cedula, Telefono, Contrasena, Id_Rol)
-                VALUES (@Nombre, @Apellido, @Email, @Cedula, @Telefono, @Contrasena, @Id_Rol);
-                SELECT 'Usuario insertado correctamente.' AS Mensaje;
-            END
-        END
+        RETURN '⚠️ Medicamento deshabilitado (tiene registros asociados).';
+    ELSE
+        -- Eliminar definitivamente si no hay relaciones
+        DELETE FROM medicamentos
+        WHERE id_medicamento = p_id;
 
-        ELSE IF @Operacion = 'U'
-        BEGIN
-            UPDATE USUARIOS
-            SET Nombre = ISNULL(@Nombre, Nombre),
-                Apellido = ISNULL(@Apellido, Apellido),
-                Email = ISNULL(@Email, Email),
-                Cedula = ISNULL(@Cedula, Cedula),
-                Telefono = ISNULL(@Telefono, Telefono),
-                Contrasena = ISNULL(@Contrasena, Contrasena),
-                Id_Rol = ISNULL(@Id_Rol, Id_Rol)
-            WHERE Id_Usuario = @Id_Usuario;
+        IF NOT FOUND THEN
+            RETURN '❌ Error: medicamento no encontrado.';
+        END IF;
 
-            IF @Activo IS NOT NULL OR @Bloqueado IS NOT NULL
-            BEGIN
-                UPDATE ACTIVIDAD_USUARIOS
-                SET Activo = ISNULL(@Activo, Activo),
-                    Bloqueado = ISNULL(@Bloqueado, Bloqueado),
-                    Ultima_Actividad = GETDATE()
-                WHERE Id_Usuario = @Id_Usuario;
-            END
-            SELECT 'Usuario actualizado correctamente.' AS Mensaje;
-        END
+        RETURN '✅ Medicamento eliminado definitivamente.';
+    END IF;
 
-        ELSE IF @Operacion = 'D'
-        BEGIN
-            -- Eliminación lógica
-            UPDATE USUARIOS
-            SET Activo = 0
-            WHERE Id_Usuario = @Id_Usuario;
-
-            UPDATE ACTIVIDAD_USUARIOS
-            SET Activo = 0, Ultima_Actividad = GETDATE()
-            WHERE Id_Usuario = @Id_Usuario;
-
-            SELECT 'Usuario desactivado correctamente (eliminación lógica).' AS Mensaje;
-        END
-
-        ELSE
-            RAISERROR('Operación inválida.',16,1);
-
-        COMMIT;
-    END TRY
-    BEGIN CATCH
-        IF @@TRANCOUNT > 0 ROLLBACK;
-        THROW;
-    END CATCH
+EXCEPTION
+    WHEN others THEN
+        RETURN '❌ Error desconocido al eliminar medicamento.';
 END;
-GO
+$$ LANGUAGE plpgsql;
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 
-CREATE PROCEDURE dbo.sp_gestion_medico_clinica
-    @Operacion CHAR(1),               -- 'I' insertar, 'U' actualizar, 'D' eliminar lógico
-    @ID_Medico INT = NULL,
-    @Id_Usuario CHAR(8) = NULL,
-    @ID_Especialidad INT = NULL,
-    @ID_Contrato INT = NULL,
-    @Horario_Atencion VARCHAR(200) = NULL,
-    @Telefono_Consulta VARCHAR(30) = NULL
-AS
-BEGIN
-    SET NOCOUNT ON;
-    BEGIN TRY
-        BEGIN TRAN;
+-- ADMIN CREADO
 
-        IF @Operacion = 'I'
-        BEGIN
-            -- Si el médico existe inactivo, reactivarlo
-            IF EXISTS (SELECT 1 FROM MEDICOS WHERE Id_Usuario = @Id_Usuario AND Activo = 0)
-            BEGIN
-                UPDATE MEDICOS
-                SET Activo = 1,
-                    ID_Especialidad = ISNULL(@ID_Especialidad, ID_Especialidad),
-                    ID_Contrato = ISNULL(@ID_Contrato, ID_Contrato),
-                    Horario_Atencion = ISNULL(@Horario_Atencion, Horario_Atencion),
-                    Telefono_Consulta = ISNULL(@Telefono_Consulta, Telefono_Consulta)
-                WHERE Id_Usuario = @Id_Usuario;
+SELECT * 
+FROM crear_usuario(
+    'Admin',
+    'Principal',
+    'admin@farmacia.com',
+    encode(digest('admin123'::bytea, 'sha256'), 'hex'),
+    1
+);
 
-                SELECT 'Médico reactivado correctamente.' AS Mensaje;
-            END
-            ELSE
-            BEGIN
-                INSERT INTO MEDICOS (Id_Usuario, ID_Especialidad, ID_Contrato, Horario_Atencion, Telefono_Consulta)
-                VALUES (@Id_Usuario, @ID_Especialidad, @ID_Contrato, @Horario_Atencion, @Telefono_Consulta);
-                SELECT 'Médico registrado correctamente.' AS Mensaje;
-            END
-        END
-
-        ELSE IF @Operacion = 'U'
-        BEGIN
-            UPDATE MEDICOS
-            SET ID_Especialidad = ISNULL(@ID_Especialidad, ID_Especialidad),
-                ID_Contrato = ISNULL(@ID_Contrato, ID_Contrato),
-                Horario_Atencion = ISNULL(@Horario_Atencion, Horario_Atencion),
-                Telefono_Consulta = ISNULL(@Telefono_Consulta, Telefono_Consulta)
-            WHERE ID_Medico = @ID_Medico;
-
-            SELECT 'Médico actualizado correctamente.' AS Mensaje;
-        END
-
-        ELSE IF @Operacion = 'D'
-        BEGIN
-            UPDATE MEDICOS
-            SET Activo = 0
-            WHERE ID_Medico = @ID_Medico;
-
-            SELECT 'Médico desactivado correctamente (eliminación lógica).' AS Mensaje;
-        END
-
-        ELSE
-            RAISERROR('Operación inválida.',16,1);
-
-        COMMIT;
-    END TRY
-    BEGIN CATCH
-        IF @@TRANCOUNT > 0 ROLLBACK;
-        THROW;
-    END CATCH
-END;
-GO
-
-CREATE PROCEDURE dbo.sp_gestion_paciente_clinica
-    @Operacion CHAR(1),                   -- 'I', 'U', 'D'
-    @ID_Paciente INT = NULL,
-    @Nombre NVARCHAR(100) = NULL,
-    @Apellido NVARCHAR(100) = NULL,
-    @Cedula VARCHAR(30) = NULL,
-    @Email NVARCHAR(255) = NULL,
-    @Telefono VARCHAR(30) = NULL,
-    @Fecha_Nacimiento DATE = NULL,
-    @Sexo VARCHAR(10) = NULL,
-    @Direccion VARCHAR(200) = NULL,
-    @ContactoEmergencia VARCHAR(100) = NULL,
-    @ID_Estado INT = NULL
-AS
-BEGIN
-    SET NOCOUNT ON;
-    BEGIN TRY
-        BEGIN TRAN;
-
-        IF @Operacion = 'I'
-        BEGIN
-            -- Si ya existe con la misma cédula inactivo, reactivar
-            IF EXISTS (SELECT 1 FROM PACIENTES WHERE Cedula = @Cedula AND Activo = 0)
-            BEGIN
-                UPDATE PACIENTES
-                SET Activo = 1,
-                    Nombre = @Nombre,
-                    Apellido = @Apellido,
-                    Email = @Email,
-                    Telefono = @Telefono,
-                    Fecha_Nacimiento = @Fecha_Nacimiento,
-                    Sexo = @Sexo,
-                    Direccion = @Direccion,
-                    ContactoEmergencia = @ContactoEmergencia,
-                    ID_Estado = ISNULL(@ID_Estado, ID_Estado)
-                WHERE Cedula = @Cedula;
-
-                SELECT 'Paciente reactivado correctamente.' AS Mensaje;
-            END
-            ELSE
-            BEGIN
-                INSERT INTO PACIENTES (Nombre, Apellido, Cedula, Email, Telefono, Fecha_Nacimiento, Sexo, Direccion, ContactoEmergencia, ID_Estado)
-                VALUES (@Nombre, @Apellido, @Cedula, @Email, @Telefono, @Fecha_Nacimiento, @Sexo, @Direccion, @ContactoEmergencia, @ID_Estado);
-                SELECT 'Paciente registrado correctamente.' AS Mensaje;
-            END
-        END
-
-        ELSE IF @Operacion = 'U'
-        BEGIN
-            UPDATE PACIENTES
-            SET Nombre = ISNULL(@Nombre, Nombre),
-                Apellido = ISNULL(@Apellido, Apellido),
-                Cedula = ISNULL(@Cedula, Cedula),
-                Email = ISNULL(@Email, Email),
-                Telefono = ISNULL(@Telefono, Telefono),
-                Fecha_Nacimiento = ISNULL(@Fecha_Nacimiento, Fecha_Nacimiento),
-                Sexo = ISNULL(@Sexo, Sexo),
-                Direccion = ISNULL(@Direccion, Direccion),
-                ContactoEmergencia = ISNULL(@ContactoEmergencia, ContactoEmergencia),
-                ID_Estado = ISNULL(@ID_Estado, ID_Estado)
-            WHERE ID_Paciente = @ID_Paciente;
-
-            SELECT 'Paciente actualizado correctamente.' AS Mensaje;
-        END
-
-        ELSE IF @Operacion = 'D'
-        BEGIN
-            UPDATE PACIENTES
-            SET Activo = 0
-            WHERE ID_Paciente = @ID_Paciente;
-
-            SELECT 'Paciente desactivado correctamente (eliminación lógica).' AS Mensaje;
-        END
-
-        ELSE
-            RAISERROR('Operación inválida.',16,1);
-
-        COMMIT;
-    END TRY
-    BEGIN CATCH
-        IF @@TRANCOUNT > 0 ROLLBACK;
-        THROW;
-    END CATCH
-END;
-GO
+SELECT * 
+FROM crear_usuario(
+    'Cliente',
+    'Común',
+    'cliente@gmail.com',
+    encode(digest('user123'::bytea, 'sha256'), 'hex'),
+    2
+);

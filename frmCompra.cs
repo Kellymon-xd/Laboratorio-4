@@ -125,7 +125,7 @@ namespace Laboratorio_4
 
             var lblCantDisponible = new Label
             {
-                Text = $"Cantidad disponible: ${medicamento.CantidadDisponible:F2}",
+                Text = $"Cantidad disponible: {medicamento.CantidadDisponible}",
                 Font = new Font("Segoe UI", 10),
                 ForeColor = Color.FromArgb(64, 64, 64),
                 AutoSize = false,
