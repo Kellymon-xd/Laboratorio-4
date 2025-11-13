@@ -1,7 +1,6 @@
 ﻿using Laboratorio_4.Modelos;
 using Laboratorio_4.Servicios;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -13,18 +12,30 @@ namespace Laboratorio_4
         public frmCompra()
         {
             InitializeComponent();
+            ConfigurarFormulario();
             ConfigurarFlowLayout();
             CargarCatalogo();
         }
 
+        private void ConfigurarFormulario()
+        {
+            this.FormBorderStyle = FormBorderStyle.Sizable;
+            this.MaximizeBox = true;
+            this.MinimizeBox = true;
+            this.MinimumSize = new Size(900, 600);
+            this.BackColor = Color.FromArgb(240, 240, 240);
+            this.Padding = new Padding(0);
+            this.Margin = new Padding(0);
+        }
+
         private void ConfigurarFlowLayout()
         {
-            // Configura el flowLayoutPanel1 desde código por si algo se resetea en el diseñador
             flowLayoutPanel1.Dock = DockStyle.Fill;
             flowLayoutPanel1.AutoScroll = true;
             flowLayoutPanel1.WrapContents = true;
             flowLayoutPanel1.FlowDirection = FlowDirection.LeftToRight;
-            flowLayoutPanel1.BackColor = Color.LightGray;
+            flowLayoutPanel1.BackColor = Color.FromArgb(240, 240, 240);
+            flowLayoutPanel1.Padding = new Padding(20);
         }
 
         private void CargarCatalogo()
@@ -46,85 +57,97 @@ namespace Laboratorio_4
 
         private Panel CrearTarjetaMedicamento(Medicamento medicamento)
         {
-            // Panel principal de la tarjeta
+            var verdePrincipal = Color.FromArgb(46, 125, 50);
+
             var card = new Panel
             {
-                Width = 220,
-                Height = 320,
+                Width = 250,
+                Height = 300,
                 BackColor = Color.White,
-                Margin = new Padding(10),
-                BorderStyle = BorderStyle.FixedSingle
+                Margin = new Padding(15),
+                BorderStyle = BorderStyle.None
             };
 
-            // Imagen
             var pb = new PictureBox
             {
-                Width = 200,
-                Height = 150,
+                Width = 220,
+                Height = 130,
                 Top = 10,
-                Left = 10,
+                Left = 15,
                 SizeMode = PictureBoxSizeMode.Zoom,
-                Image = CargarImagen(medicamento.Imagen)
+                Image = CargarImagen(medicamento.Imagen),
+                BackColor = Color.White
             };
+            card.Controls.Add(pb);
 
-            // Nombre del medicamento
+            
+            var lineaSeparadora = new Panel
+            {
+                Width = 220,
+                Height = 1,
+                Left = 15,
+                Top = pb.Bottom + 5,
+                BackColor = Color.FromArgb(220, 220, 220)
+            };
+            card.Controls.Add(lineaSeparadora);
+
+            
             var lblNombre = new Label
             {
                 Text = medicamento.Nombre,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                ForeColor = Color.Black,
                 AutoSize = false,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Width = 200,
+                Width = 220,
                 Height = 40,
-                Top = pb.Bottom + 5,
-                Left = 10,
-                BackColor = Color.Transparent
+                Top = lineaSeparadora.Bottom + 5,
+                Left = 15,
+                BackColor = Color.White
             };
+            card.Controls.Add(lblNombre);
 
-            // Precio
+            
             var lblPrecio = new Label
             {
                 Text = $"Precio: ${medicamento.PrecioUnitario:F2}",
-                Font = new Font("Segoe UI", 9),
+                Font = new Font("Segoe UI", 10),
+                ForeColor = Color.FromArgb(64, 64, 64),
                 AutoSize = false,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Width = 200,
+                Width = 220,
                 Height = 25,
                 Top = lblNombre.Bottom + 5,
-                Left = 10,
-                BackColor = Color.Transparent
+                Left = 15,
+                BackColor = Color.White
             };
+            card.Controls.Add(lblPrecio);
 
-            // Botón de agregar al carrito
+           
             var btnAgregar = new Button
             {
                 Text = "Agregar 🛒",
-                Width = 200,
-                Height = 35,
-                Top = lblPrecio.Bottom + 5,
-                Left = 10,
-                BackColor = Color.FromArgb(0, 120, 215),
+                Width = 220,
+                Height = 40,
+                Top = lblPrecio.Bottom + 10, 
+                Left = 15,
+                BackColor = verdePrincipal,
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Cursor = Cursors.Hand
             };
             btnAgregar.FlatAppearance.BorderSize = 0;
 
             btnAgregar.Click += (s, e) =>
             {
                 CarritoManager.Instancia.Agregar(medicamento);
-                MessageBox.Show($"{medicamento.Nombre} agregado al carrito.");
+                MessageBox.Show($"{medicamento.Nombre} agregado al carrito.", "Agregado", MessageBoxButtons.OK, MessageBoxIcon.Information);
             };
 
-            card.MouseLeave += (s, e) =>
-            {
-                card.BackColor = Color.White;
-                card.BorderStyle = BorderStyle.FixedSingle;
-            };
+            btnAgregar.MouseEnter += (s, e) => btnAgregar.BackColor = Color.FromArgb(56, 142, 60);
+            btnAgregar.MouseLeave += (s, e) => btnAgregar.BackColor = verdePrincipal;
 
-            // Agregar controles dentro del panel
-            card.Controls.Add(pb);
-            card.Controls.Add(lblNombre);
-            card.Controls.Add(lblPrecio);
             card.Controls.Add(btnAgregar);
 
             return card;
@@ -141,10 +164,7 @@ namespace Laboratorio_4
                 if (File.Exists(rutaImg))
                     return Image.FromFile(rutaImg);
             }
-            catch
-            {
-                // Ignorar errores de imagen
-            }
+            catch { }
             return null;
         }
     }

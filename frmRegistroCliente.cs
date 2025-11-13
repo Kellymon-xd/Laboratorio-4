@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Windows.Forms;
-
 namespace Laboratorio_4
 {
     public partial class frmRegistroCliente : Form
     {
         private UsuariosDAO u;
-
         public frmRegistroCliente()
         {
             InitializeComponent();
@@ -16,7 +14,6 @@ namespace Laboratorio_4
         private void btnIngresar_Click(object sender, EventArgs e)
         {
             string password = txtContraseña.Text.Trim();
-
             try
             {
                 (bool exito, string mensaje) resultado = u.CrearUsuario(
@@ -26,11 +23,10 @@ namespace Laboratorio_4
                     password,
                     2 // Rol cliente
                 );
-
                 if (resultado.exito)
                 {
                     MessageBox.Show(resultado.mensaje, "Registro exitoso", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    this.Close(); 
+                    this.Close();
                 }
                 else
                 {
@@ -43,8 +39,7 @@ namespace Laboratorio_4
             }
         }
 
-
-        private void btnVolver_Click(object sender, EventArgs e)
+        private void linkVolver_LinkClicked_1(object sender, LinkLabelLinkClickedEventArgs e)
         {
             this.Close();
         }
