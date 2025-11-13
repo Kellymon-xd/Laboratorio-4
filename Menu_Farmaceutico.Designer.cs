@@ -80,6 +80,7 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "Menu_Farmaceutico";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Menu";
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();

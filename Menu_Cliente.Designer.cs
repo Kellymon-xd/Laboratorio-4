@@ -79,6 +79,7 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "Menu_Cliente";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Menu_Cliente";
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();

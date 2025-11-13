@@ -28,50 +28,33 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.lblMedicamentos = new System.Windows.Forms.Label();
-            this.dgvCatalogo = new System.Windows.Forms.DataGridView();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvCatalogo)).BeginInit();
+            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.SuspendLayout();
             // 
-            // lblMedicamentos
+            // flowLayoutPanel1
             // 
-            this.lblMedicamentos.AutoSize = true;
-            this.lblMedicamentos.Location = new System.Drawing.Point(30, 39);
-            this.lblMedicamentos.Name = "lblMedicamentos";
-            this.lblMedicamentos.Size = new System.Drawing.Size(76, 13);
-            this.lblMedicamentos.TabIndex = 4;
-            this.lblMedicamentos.Text = "Medicamnetos";
-            // 
-            // dgvCatalogo
-            // 
-            this.dgvCatalogo.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvCatalogo.Location = new System.Drawing.Point(33, 80);
-            this.dgvCatalogo.Name = "dgvCatalogo";
-            this.dgvCatalogo.Size = new System.Drawing.Size(737, 341);
-            this.dgvCatalogo.TabIndex = 3;
-            this.dgvCatalogo.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvCatalogo_CellContentClick);
-            this.dgvCatalogo.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dgvCatalogo_CellFormatting);
+            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
+            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(800, 450);
+            this.flowLayoutPanel1.TabIndex = 0;
             // 
             // frmCompra
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Controls.Add(this.lblMedicamentos);
-            this.Controls.Add(this.dgvCatalogo);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Controls.Add(this.flowLayoutPanel1);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "frmCompra";
             this.Text = "Catalogo";
-            ((System.ComponentModel.ISupportInitialize)(this.dgvCatalogo)).EndInit();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
         #endregion
-        private System.Windows.Forms.Label lblMedicamentos;
-        private System.Windows.Forms.DataGridView dgvCatalogo;
+
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
     }
 }
