@@ -328,11 +328,30 @@ namespace Laboratorio_4
                 {
                     var dao = new MedicamentosDAO(conexion);
                     string resultado = dao.EliminarMedicamento(medicamento.IdMedicamento);
+
+                    try
+                    {
+                        string carpetaImg = Path.Combine(Application.StartupPath, @"..\..\img\");
+
+                        if (!string.IsNullOrEmpty(medicamento.Imagen))
+                        {
+                            string rutaImg = Path.Combine(carpetaImg, medicamento.Imagen);
+
+                            if (File.Exists(rutaImg))
+                                File.Delete(rutaImg);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Error al eliminar la imagen: " + ex.Message);
+                    }
+
                     MessageBox.Show(resultado);
                 }
 
                 CargarMedicamentos();
             }
+
             else if (dgvMedicamentos.Columns[e.ColumnIndex].HeaderText == "Editar")
             {
                 var medicamento = (Medicamento)dgvMedicamentos.Rows[e.RowIndex].DataBoundItem;

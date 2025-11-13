@@ -62,7 +62,7 @@ namespace Laboratorio_4
             var card = new Panel
             {
                 Width = 250,
-                Height = 300,
+                Height = 350,
                 BackColor = Color.White,
                 Margin = new Padding(15),
                 BorderStyle = BorderStyle.None
@@ -123,13 +123,28 @@ namespace Laboratorio_4
             };
             card.Controls.Add(lblPrecio);
 
-           
+            var lblCantDisponible = new Label
+            {
+                Text = $"Cantidad disponible: ${medicamento.CantidadDisponible:F2}",
+                Font = new Font("Segoe UI", 10),
+                ForeColor = Color.FromArgb(64, 64, 64),
+                AutoSize = false,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Width = 220,
+                Height = 25,
+                Top = lblPrecio.Bottom + 5,
+                Left = 15,
+                BackColor = Color.White
+            };
+            card.Controls.Add(lblCantDisponible);
+
+
             var btnAgregar = new Button
             {
                 Text = "Agregar 🛒",
                 Width = 220,
                 Height = 40,
-                Top = lblPrecio.Bottom + 10, 
+                Top = lblCantDisponible.Bottom + 20, 
                 Left = 15,
                 BackColor = verdePrincipal,
                 ForeColor = Color.White,

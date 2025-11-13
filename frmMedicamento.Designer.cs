@@ -149,6 +149,7 @@
             this.btnAceptar.TabIndex = 11;
             this.btnAceptar.Text = "Aceptar";
             this.btnAceptar.UseVisualStyleBackColor = false;
+            this.btnAceptar.Click += new System.EventHandler(this.BtnAceptar_Click);
             // 
             // btnImagen
             // 
@@ -166,6 +167,7 @@
             this.btnImagen.TabIndex = 12;
             this.btnImagen.Text = "Cargar";
             this.btnImagen.UseVisualStyleBackColor = false;
+            this.btnImagen.Click += new System.EventHandler(this.BtnCargarImagen_Click);
             // 
             // panel1
             // 
