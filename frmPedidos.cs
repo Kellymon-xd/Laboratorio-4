@@ -337,6 +337,7 @@ namespace Laboratorio_4
             // Desuscribir temporalmente el evento para evitar errores durante la carga
             cboCliente.SelectedIndexChanged -= cboCliente_SelectedIndexChanged;
 
+
             cboCliente.Items.Clear();
             var clientes = _pedidosDAO.ObtenerClientes();
             cboCliente.Items.Add(new ComboboxItem { Text = "Todos", Value = null });

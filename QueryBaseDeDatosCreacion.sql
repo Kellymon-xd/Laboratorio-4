@@ -414,12 +414,13 @@ $$ LANGUAGE plpgsql;
 -- VISTA DE PEDIDOS
 -- ============================================
 
-CREATE VIEW vista_pedidos_resumen AS
+CREATE OR REPLACE VIEW vista_pedidos_resumen AS
 SELECT 
     p.id_pedido,
     u.nombre || ' ' || u.apellido AS cliente,
     p.total,
-    p.fecha_pedido
+    p.fecha_pedido,
+p.id_cliente
 FROM pedidos p
 JOIN usuarios u ON p.id_cliente = u.id_usuario;
 
